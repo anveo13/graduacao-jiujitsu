@@ -120,6 +120,15 @@ function event_progress(int $eventId): array
     return ['planned'=>(int)($row['planned']??0),'done'=>(int)($row['done']??0)];
 }
 
+function find_next_event(string $fromDate): ?array
+{
+    $stmt=db()->prepare("SELECT e.id,e.name,e.event_date FROM events e WHERE e.event_date>=?
+        ORDER BY e.event_date,e.id LIMIT 1");
+    $stmt->execute([$fromDate]);
+    $event=$stmt->fetch();
+    return $event?:null;
+}
+
 function list_students_available_for_event(int $eventId): array
 {
     $stmt = db()->prepare("SELECT s.id,s.name,s.belt,s.degrees FROM students s
@@ -168,7 +177,7 @@ function check_event_graduation(int $eventId, int $graduationId, int $userId, bo
         $row = $stmt->fetch();
         if (!$row || $row['status'] !== 'planned') throw new RuntimeException('Graduação planejada não encontrada.');
         if ($row['from_belt'] !== $row['belt'] || (int) $row['from_degrees'] !== (int) $row['degrees']) {
-            throw new RuntimeException('A faixa do aluno mudou depois do planejamento. Revise o cadastro antes de dar o check.');
+            throw new RuntimeException('O aluno recebeu outra graduação depois deste planejamento. O plano do evento foi mantido, mas precisa ser revisto antes do check.');
         }
         $eligibility = student_eligibility($row['belt'], (int) $row['degrees'], $row['last_graduation_at'], new DateTimeImmutable($row['event_date'], new DateTimeZone('America/Sao_Paulo')));
         if (!$eligibility['eligible'] && !$confirmIneligible) {

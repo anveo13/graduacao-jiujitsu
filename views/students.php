@@ -31,7 +31,7 @@ declare(strict_types=1);
                         <?php $eligibility = student_eligibility($student['belt'], (int)$student['degrees'], $student['last_graduation_at'], $today); ?>
                         <article class="student-card">
                             <div class="student-main">
-                                <h3><?=h($student['name'])?></h3>
+                                <h3><a class="student-name-link" href="/?page=student&id=<?=(int)$student['id']?>"><?=h($student['name'])?></a></h3>
                                 <p><?=h($beltName)?> · <?= (int)$student['degrees'] ?> <?= (int)$student['degrees'] === 1 ? 'grau' : 'graus' ?></p>
                                 <p class="last-graduation"><?= $student['last_graduation_at'] === null ? 'Sem graduação registrada' : 'Última graduação: '.h((new DateTimeImmutable($student['last_graduation_at'], $timezone))->format('d/m/Y')) ?></p>
                                 <span class="eligibility <?=h($eligibility['status'])?>">

@@ -6,7 +6,6 @@ $whatsappUrl=$inviteLink!==''?'https://wa.me/?text='.rawurlencode("Você foi con
 ?>
 <section class="page-heading"><div><p class="eyebrow">ACESSO</p><h1>Usuários</h1><p class="muted">Contas da equipe, perfis e convites.</p></div></section>
 <?php if ($error!==''): ?><p class="alert" role="alert"><?=h($error)?></p><?php endif; ?>
-<?php if ($notice!==''): ?><p class="success-message" role="status"><?=h($notice)?></p><?php endif; ?>
 <?php if ($inviteLink!==''): ?><section class="invite-result"><p class="eyebrow">LINK DE CONVITE · VÁLIDO POR 7 DIAS</p><label>Copie e envie para a pessoa<input id="invite-link" readonly value="<?=h($inviteLink)?>"></label><div class="invite-actions"><button class="secondary" id="copy-invite" type="button">Copiar link</button><a class="primary-link" href="<?=h($whatsappUrl)?>" target="_blank" rel="noopener">Enviar pelo WhatsApp</a></div></section><?php endif; ?>
 
 <section class="user-section"><h2>Criar convite</h2><form class="invite-form" method="post" action="/?page=invite-create">

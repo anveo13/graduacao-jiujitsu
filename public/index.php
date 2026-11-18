@@ -8,6 +8,7 @@ require dirname(__DIR__).'/src/eligibility.php';
 require dirname(__DIR__).'/src/students.php';
 require dirname(__DIR__).'/src/events.php';
 require dirname(__DIR__).'/src/users.php';
+require dirname(__DIR__).'/src/graduations.php';
 
 $releases = require dirname(__DIR__).'/config/releases.php';
 $cssVersion = (string)(filemtime(dirname(__DIR__).'/public/assets/app.css') ?: 0);
@@ -45,7 +46,33 @@ $canManageStudents = $user !== null && in_array($user['role'], ['master', 'admin
 $today = new DateTimeImmutable('today', new DateTimeZone('America/Sao_Paulo'));
 $timezone = new DateTimeZone('America/Sao_Paulo');
 $notice = '';
+$confirmationNeeded = false;
+$pendingTarget = null;
 $canManageEvents = $user !== null && in_array($user['role'], ['master', 'admin'], true);
+
+if ($page === 'graduate-now') {
+    if ($method!=='POST') { http_response_code(405);exit('Método não permitido.'); }
+    $user=require_roles('master','admin');verify_csrf();
+    $studentId=filter_var($_POST['student_id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+    if ($studentId===false) { http_response_code(400);exit('Aluno inválido.'); }
+    $pendingTarget=(string)($_POST['target']??'');
+    try {
+        $done=graduate_student_now((int)$studentId,$pendingTarget,(int)$user['id'],isset($_POST['confirm_ineligible']));
+        if ($done) redirect('/?page=student&id='.$studentId.'&graduated=1');
+        $confirmationNeeded=true;$notice='Este aluno ainda não está elegível. Confirme abaixo para registrar a graduação mesmo assim.';
+        http_response_code(422);$page='student';$_GET['id']=(string)$studentId;
+    } catch (InvalidArgumentException|RuntimeException $exception) { http_response_code(422);$error=$exception->getMessage();$page='student';$_GET['id']=(string)$studentId; }
+}
+
+if ($page === 'graduation-undo-avulsa') {
+    if ($method!=='POST') { http_response_code(405);exit('Método não permitido.'); }
+    $user=require_login();verify_csrf();
+    $studentId=filter_var($_POST['student_id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+    $graduationId=filter_var($_POST['graduation_id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+    if ($studentId===false||$graduationId===false) { http_response_code(400);exit('Aluno ou graduação inválido.'); }
+    try { undo_avulsa_graduation((int)$studentId,(int)$graduationId,$user);redirect('/?page=student&id='.$studentId.'&undone=1'); }
+    catch (RuntimeException $exception) { http_response_code(422);$error=$exception->getMessage();$page='student';$_GET['id']=(string)$studentId; }
+}
 
 if ($page === 'accept-invite') {
     $inviteToken=(string)($_POST['token']??$_GET['token']??'');
@@ -243,6 +270,15 @@ if (!isset($view)) {
         $availableStudents = $canManageEvents ? list_students_available_for_event((int)$eventId) : [];
         $confirmationNeeded = $confirmationNeeded ?? null;
         $view = 'event';
+    } elseif ($page === 'student') {
+        $studentId=filter_var($_GET['id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+        if ($studentId===false) { http_response_code(400);exit('Aluno inválido.'); }
+        $student=find_student((int)$studentId);
+        if ($student===null) { http_response_code(404);exit('Aluno não encontrado.'); }
+        $history=list_student_graduations((int)$studentId);
+        $canGraduate=$canManageStudents&&(int)$student['active']===1;
+        $notice=$notice?: (isset($_GET['graduated'])?'Graduação avulsa registrada.':(isset($_GET['undone'])?'Graduação avulsa desfeita. Faixa e graus anteriores restaurados.':''));
+        $view='student';
     } elseif ($page === 'users') {
         require_roles('master');
         $users=list_users();$invitations=list_invitations();
@@ -275,6 +311,8 @@ if (!isset($view)) {
         $formError = '';
         $view = 'student-form';
     } elseif ($page === 'home') {
+        $dashboardStudents=list_dashboard_students();
+        $nextEvent=find_next_event($today->format('Y-m-d'));
         $view = 'home';
     } else {
         http_response_code(404);
@@ -283,13 +321,10 @@ if (!isset($view)) {
 }
 
 ?><!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#c8102e"><link rel="icon" type="image/svg+xml" href="/favicon.svg?v=<?=rawurlencode($faviconVersion)?>"><title><?= in_array($view,['students','student-form'],true) ? 'Alunos' : (in_array($view,['events','event'],true) ? 'Graduações' : ($view==='users'?'Usuários':($view==='profile'?'Meu perfil':'Início'))) ?> · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css?v=<?=rawurlencode($cssVersion)?>"></head><body>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#c8102e"><link rel="icon" type="image/svg+xml" href="/favicon.svg?v=<?=rawurlencode($faviconVersion)?>"><title><?= in_array($view,['students','student-form','student'],true) ? 'Alunos' : (in_array($view,['events','event'],true) ? 'Graduações' : ($view==='users'?'Usuários':($view==='profile'?'Meu perfil':'Início'))) ?> · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css?v=<?=rawurlencode($cssVersion)?>"></head><body>
 <header class="topbar"><a class="brand" href="/">Graduação <span>Jiu-Jitsu</span></a><nav class="main-nav" aria-label="Navegação principal"><a href="/?page=students">Alunos</a><a href="/?page=events">Graduações</a><?php if ($user['role']==='master'): ?><a href="/?page=users">Usuários</a><?php endif; ?><a href="/?page=profile">Meu perfil</a></nav><div class="account"><span><?=h($user['name'])?><small><?=h($roleNames[$user['role']]??$user['role'])?></small></span><form method="post" action="/?page=logout"><?=csrf_field()?><button class="logout" type="submit">Sair</button></form></div></header>
 <main class="content">
-    <?php if ($view === 'home'): ?><section class="welcome"><p class="eyebrow">PAINEL</p><h1>Olá, <?=h($user['name'])?>.</h1><p>Seu espaço para acompanhar as graduações da equipe.</p></section><section class="empty-state"><div class="belt-icon" aria-hidden="true">🥋</div><h2>Cadastro da equipe</h2><p>Consulte os alunos, confira as faixas e mantenha os cadastros em dia.</p><a class="primary-link" href="/?page=students">Ver alunos</a><p class="home-role"><span class="badge"><?= $user['role']==='viewer'?'Acesso de visualização':'Perfil com edição' ?></span></p></section>
-    <?php else: ?>
-        <?php if ($notice !== ''): ?><p class="success-message" role="status"><?=h($notice)?></p><?php endif; ?>
-        <?php require dirname(__DIR__).'/views/'.$view.'.php'; ?>
-    <?php endif; ?>
+    <?php if ($notice !== ''): ?><p class="success-message" role="status"><?=h($notice)?></p><?php endif; ?>
+    <?php require dirname(__DIR__).'/views/'.$view.'.php'; ?>
 </main><footer>Versão <?=h($releases['current'])?> · Sistema de Graduação Jiu-Jitsu</footer>
 </body></html>

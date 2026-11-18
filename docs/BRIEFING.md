@@ -1,6 +1,6 @@
 # Briefing — Graduação Jiu-Jitsu
 
-**Situação:** versão 0.4.0 publicada em `https://listagraduacao.duckdns.org/`. A versão 0.4.1, com a identidade visual vermelha, está em preparação local.
+**Situação:** versão 0.4.1 publicada em `https://listagraduacao.duckdns.org/`. A versão 0.5.0 está em preparação local.
 **Escrito em:** 17/11/2026, a partir da conversa feita dentro do projeto Carmelito's.
 **Revisado em:** 18/11/2026 — 0.1.0 publicada; VM A1 Flex e subdomínio configurados.
 **Primeiro evento real:** graduação de **04/12/2026**.
@@ -223,6 +223,8 @@ Três blocos:
 - **Desativar** quem parou de treinar (some das listas, mantém o histórico).
 - **Graduar agora** (graduação avulsa): escolhe o que o aluno recebe e registra na hora,
   sem precisar de evento.
+- Se já houver uma graduação planejada para o aluno em um evento, a graduação avulsa é
+  permitida e o planejamento do evento permanece inalterado; ele poderá ficar desatualizado.
 - Abrindo um aluno: **histórico** de todas as graduações dele, com "graduado por",
   e embaixo do cadastro "alterado por".
 - O Visualizador vê tudo, sem os botões de cadastrar, editar, desativar e graduar agora.

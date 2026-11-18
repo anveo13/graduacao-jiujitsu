@@ -32,6 +32,33 @@ function find_active_student(int $id): ?array
     return $student ?: null;
 }
 
+function find_student(int $id): ?array
+{
+    $stmt=db()->prepare('SELECT s.id,s.name,s.belt,s.degrees,s.last_graduation_at,s.active,s.created_by,s.updated_by,s.created_at,s.updated_at,u.name AS updated_by_name FROM students s LEFT JOIN users u ON u.id=s.updated_by WHERE s.id=?');
+    $stmt->execute([$id]);
+    $student=$stmt->fetch();
+    return $student?:null;
+}
+
+function list_student_graduations(int $studentId): array
+{
+    $stmt=db()->prepare("SELECT g.id,g.event_id,g.from_belt,g.from_degrees,g.to_belt,g.to_degrees,g.graduated_at,g.graduated_by,
+        u.name AS graduated_by_name,e.name AS event_name,e.event_date
+        FROM graduations g LEFT JOIN users u ON u.id=g.graduated_by LEFT JOIN events e ON e.id=g.event_id
+        WHERE g.student_id=? AND g.status='done' ORDER BY g.graduated_at DESC,g.id DESC");
+    $stmt->execute([$studentId]);
+    return $stmt->fetchAll();
+}
+
+function list_dashboard_students(): array
+{
+    $stmt=db()->query("SELECT s.id,s.name,s.belt,s.degrees,s.last_graduation_at FROM students s
+        WHERE s.active=1 AND s.last_graduation_at IS NOT NULL
+        AND NOT EXISTS (SELECT 1 FROM graduations g WHERE g.student_id=s.id AND g.event_id IS NOT NULL AND g.status='planned')
+        ORDER BY s.last_graduation_at,s.name,s.id");
+    return $stmt->fetchAll();
+}
+
 function save_student(?int $id, string $name, string $belt, int $degrees, int $userId): void
 {
     $name = trim($name);

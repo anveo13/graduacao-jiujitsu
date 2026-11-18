@@ -2,8 +2,18 @@
 declare(strict_types=1);
 
 return [
-    'current' => '0.4.1',
+    'current' => '0.5.0',
     'releases' => [
+        [
+            'version' => '0.5.0',
+            'date' => '2026-11-18',
+            'title' => 'Histórico e painel',
+            'changes' => [
+                'Graduação avulsa com confirmação quando o aluno ainda não está elegível.',
+                'Ficha do aluno com histórico, eventos e identificação de quem graduou.',
+                'Início com alertas de elegibilidade e progresso do próximo evento.',
+            ],
+        ],
         [
             'version' => '0.4.1',
             'date' => '2026-11-18',
