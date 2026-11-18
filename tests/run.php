@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require dirname(__DIR__).'/src/belts.php';
 require dirname(__DIR__).'/src/eligibility.php';
+require dirname(__DIR__).'/src/events.php';
 
 $timezone = new DateTimeZone('America/Sao_Paulo');
 $tests = 0;
@@ -45,6 +46,15 @@ $assertSame(['eligible' => false, 'eligible_at' => null, 'status' => 'max'], $ca
 $assertThrows(static fn() => $case('white', 5, null, '2026-11-18'), 'Graus acima do limite da faixa');
 $assertThrows(static fn() => $case('gray', 0, null, '2026-11-18'), 'Faixa inexistente');
 $assertThrows(static fn() => $case('blue', 0, '2026-02-30', '2026-11-18'), 'Data impossível');
+
+$assertSame('belt:blue', suggested_graduation_target('white', 4), 'Sugestão para faixa branca com quatro graus');
+$assertSame('degree:1', suggested_graduation_target('white', 2), 'Sugestão de mais um grau');
+$assertSame(null, suggested_graduation_target('black', 6), 'Faixa preta no grau máximo sem sugestão');
+$assertSame(null, suggested_graduation_target('black', 4), 'Sem sugestão de nova faixa para a faixa preta');
+$assertSame(['belt'=>'white','degrees'=>4], resolve_graduation_target('white',2,'degree:2'), 'Escolha de dois graus');
+$assertSame(['belt'=>'purple','degrees'=>0], resolve_graduation_target('blue',4,'belt:purple'), 'Troca de faixa zera os graus');
+$assertThrows(static fn() => resolve_graduation_target('white',4,'degree:1'), 'Não ultrapassa o limite da faixa');
+$assertThrows(static fn() => validate_event_date('2026-02-30'), 'Data impossível de evento');
 
 if ($failures !== []) {
     fwrite(STDERR, implode("\n", $failures) . "\n");

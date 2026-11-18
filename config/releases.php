@@ -2,8 +2,18 @@
 declare(strict_types=1);
 
 return [
-    'current' => '0.2.0',
+    'current' => '0.3.0',
     'releases' => [
+        [
+            'version' => '0.3.0',
+            'date' => '2026-11-18',
+            'title' => 'Eventos de graduação',
+            'changes' => [
+                'Criação de eventos e planejamento da graduação de cada aluno.',
+                'Check com aviso de elegibilidade, esconder faltantes e desfazer o check mais recente.',
+                'Lista organizada por faixa, com progresso e identificação de quem graduou cada aluno.',
+            ],
+        ],
         [
             'version' => '0.2.0',
             'date' => '2026-11-18',

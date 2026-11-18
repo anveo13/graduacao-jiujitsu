@@ -6,6 +6,7 @@ require dirname(__DIR__).'/src/auth.php';
 require dirname(__DIR__).'/src/belts.php';
 require dirname(__DIR__).'/src/eligibility.php';
 require dirname(__DIR__).'/src/students.php';
+require dirname(__DIR__).'/src/events.php';
 
 $releases = require dirname(__DIR__).'/config/releases.php';
 $page = (string) ($_GET['page'] ?? 'home');
@@ -41,6 +42,61 @@ $canManageStudents = $user !== null && in_array($user['role'], ['master', 'admin
 $today = new DateTimeImmutable('today', new DateTimeZone('America/Sao_Paulo'));
 $timezone = new DateTimeZone('America/Sao_Paulo');
 $notice = '';
+$canManageEvents = $user !== null && in_array($user['role'], ['master', 'admin'], true);
+
+if ($page === 'event-create') {
+    if ($method !== 'POST') { http_response_code(405); exit('Método não permitido.'); }
+    $user = require_roles('master', 'admin'); verify_csrf();
+    try {
+        $eventId = create_event((string)($_POST['name'] ?? ''), (string)($_POST['event_date'] ?? ''), (int)$user['id']);
+        redirect('/?page=event&id='.$eventId.'&created=1');
+    } catch (InvalidArgumentException $exception) { http_response_code(422); $error = $exception->getMessage(); $page = 'events'; }
+}
+
+if ($page === 'event-add-student') {
+    if ($method !== 'POST') { http_response_code(405); exit('Método não permitido.'); }
+    $user = require_roles('master', 'admin'); verify_csrf();
+    $eventId = filter_var($_POST['event_id'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+    $studentId = filter_var($_POST['student_id'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+    if ($eventId === false || $studentId === false) { http_response_code(400); exit('Evento ou aluno inválido.'); }
+    try { add_student_to_event((int)$eventId,(int)$studentId,(string)($_POST['target']??''),(int)$user['id']); redirect('/?page=event&id='.$eventId.'&added=1'); }
+    catch (InvalidArgumentException|RuntimeException $exception) { http_response_code(422); $error=$exception->getMessage(); $page='event'; $_GET['id']=(string)$eventId; }
+}
+
+if ($page === 'event-hide' || $page === 'event-show') {
+    if ($method !== 'POST') { http_response_code(405); exit('Método não permitido.'); }
+    $user = require_roles('master', 'admin'); verify_csrf();
+    $eventId = filter_var($_POST['event_id'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+    $graduationId = filter_var($_POST['graduation_id'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+    if ($eventId === false || $graduationId === false) { http_response_code(400); exit('Evento ou graduação inválido.'); }
+    try { set_event_graduation_hidden((int)$eventId,(int)$graduationId,$page==='event-hide',(int)$user['id']); redirect('/?page=event&id='.$eventId.'&visibility=1'); }
+    catch (RuntimeException $exception) { http_response_code(422); $error=$exception->getMessage(); $page='event'; $_GET['id']=(string)$eventId; }
+}
+
+if ($page === 'event-check') {
+    if ($method !== 'POST') { http_response_code(405); exit('Método não permitido.'); }
+    verify_csrf(); $user = require_login();
+    $eventId=filter_var($_POST['event_id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+    $graduationId=filter_var($_POST['graduation_id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+    if ($eventId===false||$graduationId===false) { http_response_code(400); exit('Evento ou graduação inválido.'); }
+    try {
+        $done=check_event_graduation((int)$eventId,(int)$graduationId,(int)$user['id'],isset($_POST['confirm_ineligible']));
+        if ($done) redirect('/?page=event&id='.$eventId.'&checked=1');
+        $confirmationNeeded=(int)$graduationId;
+        $notice='Este aluno ainda não está elegível na data do evento. Confirme no cartão para registrar mesmo assim.';
+        http_response_code(422); $page='event'; $_GET['id']=(string)$eventId;
+    } catch (RuntimeException $exception) { http_response_code(422); $error=$exception->getMessage(); $page='event'; $_GET['id']=(string)$eventId; }
+}
+
+if ($page === 'event-undo') {
+    if ($method !== 'POST') { http_response_code(405); exit('Método não permitido.'); }
+    verify_csrf(); $user=require_login();
+    $eventId=filter_var($_POST['event_id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+    $graduationId=filter_var($_POST['graduation_id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+    if ($eventId===false||$graduationId===false) { http_response_code(400); exit('Evento ou graduação inválido.'); }
+    try { undo_event_graduation((int)$eventId,(int)$graduationId,$user); redirect('/?page=event&id='.$eventId.'&undone=1'); }
+    catch (RuntimeException $exception) { http_response_code(422); $error=$exception->getMessage(); $page='event'; $_GET['id']=(string)$eventId; }
+}
 
 if ($page === 'student-save') {
     if ($method !== 'POST') {
@@ -118,6 +174,21 @@ if (!isset($view)) {
         $students = list_active_students($search);
         $notice = isset($_GET['saved']) ? 'Aluno salvo.' : (isset($_GET['deactivated']) ? 'Aluno desativado. O histórico foi mantido.' : '');
         $view = 'students';
+    } elseif ($page === 'events') {
+        $events = list_events();
+        $view = 'events';
+    } elseif ($page === 'event') {
+        $eventId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+        if ($eventId === false) { http_response_code(400); exit('Evento inválido.'); }
+        $event = find_event((int)$eventId);
+        if ($event === null) { http_response_code(404); exit('Evento não encontrado.'); }
+        $notice = $notice ?: (isset($_GET['created']) ? 'Evento criado.' : (isset($_GET['added']) ? 'Aluno adicionado à lista.' : (isset($_GET['checked']) ? 'Graduação registrada.' : (isset($_GET['undone']) ? 'Check desfeito; aluno voltou para a lista pendente.' : (isset($_GET['visibility']) ? 'Lista atualizada.' : '')))));
+        $showHidden = isset($_GET['hidden']);
+        $graduations = list_event_graduations((int)$eventId, $showHidden);
+        $progress = event_progress((int)$eventId);
+        $availableStudents = $canManageEvents ? list_students_available_for_event((int)$eventId) : [];
+        $confirmationNeeded = $confirmationNeeded ?? null;
+        $view = 'event';
     } elseif ($page === 'student-new') {
         require_roles('master', 'admin');
         $student = null;
@@ -148,8 +219,8 @@ if (!isset($view)) {
 }
 
 ?><!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#17352c"><title><?= $view === 'students' || $view === 'student-form' ? 'Alunos' : 'Início' ?> · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css"></head><body>
-<header class="topbar"><a class="brand" href="/">Graduação <span>Jiu-Jitsu</span></a><nav class="main-nav" aria-label="Navegação principal"><a href="/?page=students">Alunos</a></nav><div class="account"><span><?=h($user['name'])?><small><?=h($roleNames[$user['role']]??$user['role'])?></small></span><form method="post" action="/?page=logout"><?=csrf_field()?><button class="logout" type="submit">Sair</button></form></div></header>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#17352c"><title><?= in_array($view,['students','student-form'],true) ? 'Alunos' : (in_array($view,['events','event'],true) ? 'Graduações' : 'Início') ?> · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css"></head><body>
+<header class="topbar"><a class="brand" href="/">Graduação <span>Jiu-Jitsu</span></a><nav class="main-nav" aria-label="Navegação principal"><a href="/?page=students">Alunos</a><a href="/?page=events">Graduações</a></nav><div class="account"><span><?=h($user['name'])?><small><?=h($roleNames[$user['role']]??$user['role'])?></small></span><form method="post" action="/?page=logout"><?=csrf_field()?><button class="logout" type="submit">Sair</button></form></div></header>
 <main class="content">
     <?php if ($view === 'home'): ?><section class="welcome"><p class="eyebrow">PAINEL</p><h1>Olá, <?=h($user['name'])?>.</h1><p>Seu espaço para acompanhar as graduações da equipe.</p></section><section class="empty-state"><div class="belt-icon" aria-hidden="true">🥋</div><h2>Cadastro da equipe</h2><p>Consulte os alunos, confira as faixas e mantenha os cadastros em dia.</p><a class="primary-link" href="/?page=students">Ver alunos</a><p class="home-role"><span class="badge"><?= $user['role']==='viewer'?'Acesso de visualização':'Perfil com edição' ?></span></p></section>
     <?php else: ?>
