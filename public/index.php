@@ -138,14 +138,42 @@ if ($page === 'event-create') {
     } catch (InvalidArgumentException $exception) { http_response_code(422); $error = $exception->getMessage(); $page = 'events'; }
 }
 
-if ($page === 'event-add-student') {
+if ($page === 'event-add-students') {
     if ($method !== 'POST') { http_response_code(405); exit('Método não permitido.'); }
     $user = require_roles('master', 'admin'); verify_csrf();
     $eventId = filter_var($_POST['event_id'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
-    $studentId = filter_var($_POST['student_id'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
-    if ($eventId === false || $studentId === false) { http_response_code(400); exit('Evento ou aluno inválido.'); }
-    try { add_student_to_event((int)$eventId,(int)$studentId,(string)($_POST['target']??''),(int)$user['id']); redirect('/?page=event&id='.$eventId.'&added=1'); }
+    if ($eventId === false) { http_response_code(400); exit('Evento inválido.'); }
+    $targets = [];
+    foreach ((array)($_POST['students'] ?? []) as $rawId) {
+        $studentId = filter_var($rawId, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+        if ($studentId === false) { http_response_code(400); exit('Aluno inválido.'); }
+        $targets[(int)$studentId] = (string)(($_POST['target'] ?? [])[$studentId] ?? '');
+    }
+    try { $added=add_students_to_event((int)$eventId,$targets,(int)$user['id']); redirect('/?page=event&id='.$eventId.'&added='.$added); }
     catch (InvalidArgumentException|RuntimeException $exception) { http_response_code(422); $error=$exception->getMessage(); $page='event'; $_GET['id']=(string)$eventId; }
+}
+
+if ($page === 'event-target' || $page === 'event-remove') {
+    if ($method !== 'POST') { http_response_code(405); exit('Método não permitido.'); }
+    $user = require_roles('master', 'admin'); verify_csrf();
+    $eventId = filter_var($_POST['event_id'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+    $graduationId = filter_var($_POST['graduation_id'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+    if ($eventId === false || $graduationId === false) { http_response_code(400); exit('Evento ou graduação inválido.'); }
+    try {
+        if ($page === 'event-target') { update_event_graduation_target((int)$eventId,(int)$graduationId,(string)($_POST['target']??''),(int)$user['id']); redirect('/?page=event&id='.$eventId.'&changed=1'); }
+        remove_event_graduation((int)$eventId,(int)$graduationId); redirect('/?page=event&id='.$eventId.'&removed=1');
+    } catch (InvalidArgumentException|RuntimeException $exception) { http_response_code(422); $error=$exception->getMessage(); $page='event'; $_GET['id']=(string)$eventId; }
+}
+
+if ($page === 'event-update' || $page === 'event-delete') {
+    if ($method !== 'POST') { http_response_code(405); exit('Método não permitido.'); }
+    $user = require_roles('master', 'admin'); verify_csrf();
+    $eventId = filter_var($_POST['event_id'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+    if ($eventId === false) { http_response_code(400); exit('Evento inválido.'); }
+    try {
+        if ($page === 'event-update') { update_event((int)$eventId,(string)($_POST['name']??''),(string)($_POST['event_date']??''),(int)$user['id']); redirect('/?page=event&id='.$eventId.'&updated=1'); }
+        delete_event((int)$eventId); redirect('/?page=events&deleted=1');
+    } catch (InvalidArgumentException|RuntimeException $exception) { http_response_code(422); $error=$exception->getMessage(); $page='event'; $_GET['id']=(string)$eventId; }
 }
 
 if ($page === 'event-hide' || $page === 'event-show') {
@@ -261,13 +289,25 @@ if (!isset($view)) {
         $view = 'students';
     } elseif ($page === 'events') {
         $events = list_events();
+        $notice = isset($_GET['deleted']) ? 'Evento apagado.' : '';
         $view = 'events';
     } elseif ($page === 'event') {
         $eventId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
         if ($eventId === false) { http_response_code(400); exit('Evento inválido.'); }
         $event = find_event((int)$eventId);
         if ($event === null) { http_response_code(404); exit('Evento não encontrado.'); }
-        $notice = $notice ?: (isset($_GET['created']) ? 'Evento criado.' : (isset($_GET['added']) ? 'Aluno adicionado à lista.' : (isset($_GET['checked']) ? 'Graduação registrada.' : (isset($_GET['undone']) ? 'Check desfeito; aluno voltou para a lista pendente.' : (isset($_GET['visibility']) ? 'Lista atualizada.' : '')))));
+        $addedCount = (int)($_GET['added'] ?? 0);
+        $notices = [
+            'created' => 'Evento criado.',
+            'added' => $addedCount > 1 ? $addedCount.' alunos adicionados à lista.' : 'Aluno adicionado à lista.',
+            'checked' => 'Graduação registrada.',
+            'undone' => 'Check desfeito; aluno voltou para a lista pendente.',
+            'visibility' => 'Lista atualizada.',
+            'changed' => 'Graduação planejada alterada.',
+            'removed' => 'Aluno tirado da lista do evento.',
+            'updated' => 'Evento atualizado.',
+        ];
+        foreach ($notices as $key => $text) { if ($notice === '' && isset($_GET[$key])) $notice = $text; }
         $showHidden = isset($_GET['hidden']);
         $graduations = list_event_graduations((int)$eventId, $showHidden);
         $progress = event_progress((int)$eventId);

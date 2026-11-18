@@ -24,7 +24,7 @@ $chevron='<svg class="dashboard-chevron" viewBox="0 0 24 24" aria-hidden="true">
     <summary class="dashboard-heading"><div><p class="eyebrow">ELEGIBILIDADE</p><h2>Já podem ser graduados</h2></div><span class="dashboard-heading-side"><span class="count-pill"><?=count($eligibleNow)?></span><?=$chevron?></span></summary>
     <?php if ($eligibleNow===[]): ?><p class="dashboard-empty">Nenhum aviso de elegibilidade no momento.</p><?php else: ?><div class="dashboard-list">
         <?php foreach ($eligibleNow as $item): $student=$item['student']; ?>
-            <a class="dashboard-student" href="/?page=student&id=<?=(int)$student['id']?>"><span><strong><?=h($student['name'])?></strong><small><?=h(belt_rank($student['belt'],(int)$student['degrees']))?></small></span><small>Elegível desde <?=h((new DateTimeImmutable($item['eligibility']['eligible_at'],new DateTimeZone('America/Sao_Paulo')))->format('d/m/Y'))?></small></a>
+            <a class="dashboard-student" href="/?page=student&id=<?=(int)$student['id']?>"><span><strong><?=h($student['name'])?></strong><small><?=belt_rank_html($student['belt'],(int)$student['degrees'])?></small></span><small>Elegível desde <?=h((new DateTimeImmutable($item['eligibility']['eligible_at'],new DateTimeZone('America/Sao_Paulo')))->format('d/m/Y'))?></small></a>
         <?php endforeach; ?>
     </div><?php endif; ?>
 </details>
@@ -33,7 +33,7 @@ $chevron='<svg class="dashboard-chevron" viewBox="0 0 24 24" aria-hidden="true">
     <summary class="dashboard-heading"><div><p class="eyebrow">PLANEJAMENTO</p><h2>Elegíveis nos próximos 30 dias</h2></div><span class="dashboard-heading-side"><span class="count-pill"><?=count($eligibleSoon)?></span><?=$chevron?></span></summary>
     <?php if ($eligibleSoon===[]): ?><p class="dashboard-empty">Nenhum aluno entra no período nos próximos 30 dias.</p><?php else: ?><div class="dashboard-list">
         <?php foreach ($eligibleSoon as $item): $student=$item['student']; ?>
-            <a class="dashboard-student" href="/?page=student&id=<?=(int)$student['id']?>"><span><strong><?=h($student['name'])?></strong><small><?=h(belt_rank($student['belt'],(int)$student['degrees']))?></small></span><small>A partir de <?=h((new DateTimeImmutable($item['eligibility']['eligible_at'],new DateTimeZone('America/Sao_Paulo')))->format('d/m/Y'))?></small></a>
+            <a class="dashboard-student" href="/?page=student&id=<?=(int)$student['id']?>"><span><strong><?=h($student['name'])?></strong><small><?=belt_rank_html($student['belt'],(int)$student['degrees'])?></small></span><small>A partir de <?=h((new DateTimeImmutable($item['eligibility']['eligible_at'],new DateTimeZone('America/Sao_Paulo')))->format('d/m/Y'))?></small></a>
         <?php endforeach; ?>
     </div><?php endif; ?>
 </details>

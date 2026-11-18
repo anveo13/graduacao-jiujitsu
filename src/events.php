@@ -140,28 +140,136 @@ function list_students_available_for_event(int $eventId): array
 
 function add_student_to_event(int $eventId, int $studentId, string $target, int $userId): void
 {
+    add_students_to_event($eventId, [$studentId => $target], $userId);
+}
+
+/**
+ * Adiciona vários alunos de uma vez (tudo ou nada).
+ * @param array<int,string> $targets id do aluno => escolha ("degree:1", "belt:blue"...)
+ */
+function add_students_to_event(int $eventId, array $targets, int $userId): int
+{
+    if ($targets === []) throw new InvalidArgumentException('Marque pelo menos um aluno.');
     $pdo = db();
     $pdo->beginTransaction();
     try {
         $event = $pdo->prepare('SELECT id FROM events WHERE id=? FOR UPDATE');
         $event->execute([$eventId]);
         if (!$event->fetch()) throw new RuntimeException('Evento não encontrado.');
-        $student = $pdo->prepare('SELECT id,belt,degrees FROM students WHERE id=? AND active=1 FOR UPDATE');
-        $student->execute([$studentId]);
-        $row = $student->fetch();
-        if (!$row) throw new RuntimeException('Aluno não encontrado ou desativado.');
-        $destination = resolve_graduation_target($row['belt'], (int) $row['degrees'], $target);
+        $student = $pdo->prepare('SELECT id,name,belt,degrees FROM students WHERE id=? AND active=1 FOR UPDATE');
         $insert = $pdo->prepare("INSERT INTO graduations(student_id,event_id,from_belt,from_degrees,to_belt,to_degrees,status,created_by,updated_by)
             VALUES(?,?,?,?,?,?,'planned',?,?)");
-        $insert->execute([$studentId,$eventId,$row['belt'],$row['degrees'],$destination['belt'],$destination['degrees'],$userId,$userId]);
+        foreach ($targets as $studentId => $target) {
+            $student->execute([(int) $studentId]);
+            $row = $student->fetch();
+            if (!$row) throw new RuntimeException('Aluno não encontrado ou desativado.');
+            try {
+                $destination = resolve_graduation_target($row['belt'], (int) $row['degrees'], (string) $target);
+            } catch (InvalidArgumentException) {
+                throw new InvalidArgumentException('Escolha a graduação de '.$row['name'].'.');
+            }
+            $insert->execute([(int) $studentId,$eventId,$row['belt'],$row['degrees'],$destination['belt'],$destination['degrees'],$userId,$userId]);
+        }
         $pdo->commit();
+        return count($targets);
     } catch (Throwable $error) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         if ($error instanceof PDOException && (string) $error->getCode() === '23000') {
-            throw new RuntimeException('Este aluno já está na lista deste evento.');
+            throw new RuntimeException('Um dos alunos já está na lista deste evento. Atualize a página e tente de novo.');
         }
         throw $error;
     }
+}
+
+/** Troca o que o aluno vai receber. Recalcula a partir da faixa e graus ATUAIS (corrige plano desatualizado). */
+function update_event_graduation_target(int $eventId, int $graduationId, string $target, int $userId): void
+{
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare("SELECT g.id,s.belt,s.degrees FROM graduations g JOIN students s ON s.id=g.student_id
+            WHERE g.event_id=? AND g.id=? AND g.status='planned' FOR UPDATE");
+        $stmt->execute([$eventId,$graduationId]);
+        $row = $stmt->fetch();
+        if (!$row) throw new RuntimeException('Graduação planejada não encontrada.');
+        $destination = resolve_graduation_target($row['belt'], (int) $row['degrees'], $target);
+        $update = $pdo->prepare("UPDATE graduations SET from_belt=?,from_degrees=?,to_belt=?,to_degrees=?,updated_by=? WHERE id=? AND status='planned'");
+        $update->execute([$row['belt'],$row['degrees'],$destination['belt'],$destination['degrees'],$userId,$graduationId]);
+        $pdo->commit();
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
+/** Tira o aluno da lista. Só vale para graduação ainda não realizada. */
+function remove_event_graduation(int $eventId, int $graduationId): void
+{
+    $stmt = db()->prepare("DELETE FROM graduations WHERE event_id=? AND id=? AND status='planned'");
+    $stmt->execute([$eventId,$graduationId]);
+    if ($stmt->rowCount() !== 1) throw new RuntimeException('Graduação planejada não encontrada. Se já teve check, desfaça o check antes.');
+}
+
+function update_event(int $eventId, string $name, string $date, int $userId): void
+{
+    $name = trim($name);
+    if ($name === '' || mb_strlen($name, 'UTF-8') > 150) {
+        throw new InvalidArgumentException('Informe o nome do evento (até 150 caracteres).');
+    }
+    validate_event_date($date);
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $event = $pdo->prepare('SELECT id,event_date FROM events WHERE id=? FOR UPDATE');
+        $event->execute([$eventId]);
+        $row = $event->fetch();
+        if (!$row) throw new RuntimeException('Evento não encontrado.');
+        // A data do evento é a data das graduações já feitas nele: com check, a data não muda.
+        if ($row['event_date'] !== $date && event_progress($eventId)['done'] > 0) {
+            throw new RuntimeException('Este evento já tem graduações registradas; a data não pode mudar. Desfaça os checks antes, se precisar.');
+        }
+        $stmt = $pdo->prepare('UPDATE events SET name=?,event_date=?,updated_by=? WHERE id=?');
+        $stmt->execute([$name,$date,$userId,$eventId]);
+        $pdo->commit();
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
+/** Apaga o evento e a lista planejada. Recusa se houver graduação realizada (o evento é o registro daquele dia). */
+function delete_event(int $eventId): void
+{
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $event = $pdo->prepare('SELECT id FROM events WHERE id=? FOR UPDATE');
+        $event->execute([$eventId]);
+        if (!$event->fetch()) throw new RuntimeException('Evento não encontrado.');
+        $done = $pdo->prepare("SELECT COUNT(*) FROM graduations WHERE event_id=? AND status='done'");
+        $done->execute([$eventId]);
+        if ((int) $done->fetchColumn() > 0) throw new RuntimeException('Este evento já tem graduações registradas e não pode ser apagado.');
+        $pdo->prepare("DELETE FROM graduations WHERE event_id=? AND status='planned'")->execute([$eventId]);
+        $pdo->prepare('DELETE FROM events WHERE id=?')->execute([$eventId]);
+        $pdo->commit();
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+}
+
+/** Texto para mandar no WhatsApp com quem já recebeu o check. */
+function event_share_text(array $event, array $graduations): string
+{
+    $date = (new DateTimeImmutable($event['event_date'], new DateTimeZone('America/Sao_Paulo')))->format('d/m/Y');
+    $lines = ['🥋 '.$event['name'].' · '.$date, ''];
+    foreach ($graduations as $row) {
+        if ($row['status'] !== 'done') continue;
+        $lines[] = '• '.$row['student_name'].': '.belt_rank($row['from_belt'], (int) $row['from_degrees']).' → '.belt_rank($row['to_belt'], (int) $row['to_degrees']);
+    }
+    $lines[] = '';
+    $lines[] = 'Parabéns a todos! 👏';
+    return implode("\n", $lines);
 }
 
 /** Returns false when the date requires an explicit ineligible override. */
@@ -177,7 +285,7 @@ function check_event_graduation(int $eventId, int $graduationId, int $userId, bo
         $row = $stmt->fetch();
         if (!$row || $row['status'] !== 'planned') throw new RuntimeException('Graduação planejada não encontrada.');
         if ($row['from_belt'] !== $row['belt'] || (int) $row['from_degrees'] !== (int) $row['degrees']) {
-            throw new RuntimeException('O aluno recebeu outra graduação depois deste planejamento. O plano do evento foi mantido, mas precisa ser revisto antes do check.');
+            throw new RuntimeException('O aluno recebeu outra graduação depois deste planejamento. Use "Alterar" no cartão dele para revisar antes do check.');
         }
         $eligibility = student_eligibility($row['belt'], (int) $row['degrees'], $row['last_graduation_at'], new DateTimeImmutable($row['event_date'], new DateTimeZone('America/Sao_Paulo')));
         if (!$eligibility['eligible'] && !$confirmIneligible) {

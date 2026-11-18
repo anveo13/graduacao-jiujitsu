@@ -25,15 +25,15 @@ declare(strict_types=1);
         <?php $beltStudents = array_values(array_filter($students, static fn(array $student): bool => $student['belt'] === $beltCode)); ?>
         <?php if ($beltStudents !== []): ?>
             <section class="belt-group" aria-labelledby="belt-<?=h($beltCode)?>">
-                <h2 id="belt-<?=h($beltCode)?>"><?=h($beltName)?> <span><?=count($beltStudents)?></span></h2>
+                <h2 id="belt-<?=h($beltCode)?>"><?=belt_bar_html($beltCode)?><?=h($beltName)?> <span><?=count($beltStudents)?></span></h2>
                 <div class="student-list">
                     <?php foreach ($beltStudents as $student): ?>
                         <?php $eligibility = student_eligibility($student['belt'], (int)$student['degrees'], $student['last_graduation_at'], $today); ?>
                         <article class="student-card">
                             <div class="student-main">
                                 <h3><a class="student-name-link" href="/?page=student&id=<?=(int)$student['id']?>"><?=h($student['name'])?></a></h3>
-                                <p><?=h(belt_rank($student['belt'], (int)$student['degrees']))?></p>
-                                <p class="last-graduation"><?= $student['last_graduation_at'] === null ? 'Sem graduação registrada' : 'Última graduação: '.h((new DateTimeImmutable($student['last_graduation_at'], $timezone))->format('d/m/Y')) ?></p>
+                                <p><?=belt_rank_html($student['belt'], (int)$student['degrees'])?></p>
+                                <p class="last-graduation"><?= $student['last_graduation_at'] === null ? 'Sem data da última graduação' : 'Última graduação: '.h((new DateTimeImmutable($student['last_graduation_at'], $timezone))->format('d/m/Y')) ?></p>
                                 <span class="eligibility <?=h($eligibility['status'])?>">
                                     <?php if ($eligibility['status'] === 'max'): ?>Último grau
                                     <?php elseif ($eligibility['eligible']): ?>Elegível

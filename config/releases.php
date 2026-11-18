@@ -2,8 +2,21 @@
 declare(strict_types=1);
 
 return [
-    'current' => '0.5.3',
+    'current' => '0.6.0',
     'releases' => [
+        [
+            'version' => '0.6.0',
+            'date' => '2026-11-18',
+            'title' => 'Evento completo e cores das faixas',
+            'changes' => [
+                'Adicionar vários alunos de uma vez ao evento, com a graduação já sugerida para cada um.',
+                'Alterar o que o aluno vai receber, ou tirar o aluno da lista, pelo "Alterar" no cartão dele.',
+                'Se o aluno recebeu outra graduação depois do plano, o cartão avisa e já abre o "Alterar" para revisar.',
+                'Editar o nome e a data do evento, ou apagar um evento que ainda não tem check.',
+                'Compartilhar o resultado do evento no WhatsApp, ou copiar o texto.',
+                'Cores das faixas: o nome aparece na cor da faixa, e os títulos e a ficha mostram uma mini-faixa com os graus.',
+            ],
+        ],
         [
             'version' => '0.5.3',
             'date' => '2026-11-18',

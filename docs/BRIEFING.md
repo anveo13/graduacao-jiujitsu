@@ -240,6 +240,15 @@ Três blocos:
   - quem ainda não está elegível aparece com um aviso na linha;
   - linha riscada mostra "graduado por Fulano".
 - Os riscados ficam no evento para sempre: o evento é o registro daquele dia.
+- (0.6.0) **Adicionar vários** alunos de uma vez, com a graduação sugerida já marcada.
+- (0.6.0) **Alterar** o que o aluno vai receber ou **tirar da lista**: só enquanto não teve check.
+  Alterar recalcula a partir da faixa e graus atuais (corrige o plano se o aluno recebeu outra
+  graduação depois de planejado).
+- (0.6.0) **Editar evento**: o nome sempre; a data só enquanto não houver check (a data do evento é
+  a data das graduações feitas nele). **Apagar evento**: só sem nenhum check.
+- (0.6.0) **Compartilhar** o resultado (quem teve check) no WhatsApp ou copiar o texto.
+- (0.6.0) **Cores**: o nome da faixa aparece na cor dela (Branca em cinza); títulos de faixa e a
+  ficha do aluno mostram uma mini-faixa com uma listra por grau. Nada além disso é colorido.
 - O Visualizador só vê a lista e dá o check (e desfaz o próprio).
 
 ### 4.5 Usuários (só o Master)
