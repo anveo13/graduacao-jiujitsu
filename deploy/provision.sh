@@ -13,8 +13,10 @@ if [[ ! -f /etc/graduacao/duckdns.curl ]]; then
  [[ -n "$DUCKDNS_TOKEN" ]] || fail 'token DuckDNS vazio'
 fi
 export DEBIAN_FRONTEND=noninteractive
+echo "iptables-persistent iptables-persistent/autosave_v4 boolean false" | debconf-set-selections
+echo "iptables-persistent iptables-persistent/autosave_v6 boolean false" | debconf-set-selections
 apt-get update; apt-get -y upgrade
-apt-get install -y ca-certificates curl git openssh-client gnupg openssl ufw mariadb-server php8.3-fpm php8.3-cli php8.3-mysql php8.3-mbstring php8.3-xml
+apt-get install -y ca-certificates curl git openssh-client gnupg openssl iptables-persistent netfilter-persistent fail2ban python3-systemd mariadb-server php8.3-fpm php8.3-cli php8.3-mysql php8.3-mbstring php8.3-xml
 timedatectl set-timezone America/Sao_Paulo
 getent group graduacao-web >/dev/null || groupadd --system graduacao-web
 id "$APP_USER" >/dev/null 2>&1 || useradd --system --create-home --home-dir "/home/$APP_USER" --shell /bin/bash "$APP_USER"
@@ -136,7 +138,40 @@ Persistent=true
 WantedBy=timers.target
 EOF
 systemctl daemon-reload; systemctl enable --now graduacao-backup.timer
-ufw allow OpenSSH; ufw allow 80/tcp; ufw allow 443/tcp; ufw --force enable
+# Firewall: a imagem da Oracle usa iptables com um REJECT no fim do INPUT (não usar ufw).
+# Abre 80/443 antes do REJECT e salva, mantendo as regras existentes.
+abrir_porta(){
+ if iptables -C INPUT -p "$1" -m state --state NEW -m "$1" --dport "$2" -j ACCEPT 2>/dev/null; then return; fi
+ local pos; pos="$(iptables -L INPUT --line-numbers -n | awk '$2 == "REJECT" {print $1; exit}')"
+ if [[ -n "$pos" ]]; then iptables -I INPUT "$pos" -p "$1" -m state --state NEW -m "$1" --dport "$2" -j ACCEPT
+ else iptables -A INPUT -p "$1" -m state --state NEW -m "$1" --dport "$2" -j ACCEPT; fi
+}
+systemctl stop fail2ban 2>/dev/null || true
+abrir_porta tcp 80; abrir_porta tcp 443; abrir_porta udp 443
+netfilter-persistent save >/dev/null
+# SSH só por chave (só se o admin já tiver chave, para não trancar ninguém do lado de fora)
+ADMIN_KEYS="$(getent passwd "${SUDO_USER:-ubuntu}" | cut -d: -f6)/.ssh/authorized_keys"
+if [[ -s "$ADMIN_KEYS" ]]; then
+ cat > /etc/ssh/sshd_config.d/01-graduacao.conf <<'EOF'
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin no
+PubkeyAuthentication yes
+MaxAuthTries 4
+EOF
+ if sshd -t; then systemctl is-active --quiet ssh && systemctl reload ssh || true
+ else rm -f /etc/ssh/sshd_config.d/01-graduacao.conf; echo "AVISO: configuração SSH inválida; mantida a original."; fi
+fi
+cat > /etc/fail2ban/jail.d/graduacao.local <<'EOF'
+[DEFAULT]
+bantime  = 1h
+findtime = 10m
+maxretry = 5
+[sshd]
+enabled = true
+backend = systemd
+EOF
+systemctl enable fail2ban >/dev/null 2>&1; systemctl restart fail2ban
 cat > /etc/systemd/system/graduacao-duckdns.service <<'EOF'
 [Unit]
 Description=Atualiza o IP DuckDNS para Graduação Jiu-Jitsu

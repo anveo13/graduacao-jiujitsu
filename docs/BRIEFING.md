@@ -546,11 +546,11 @@ só aparecem em fevereiro.
 | Pode haver outro Master? | Não. Só o `gbocidental` |
 | Convites antes de 04/12? | Não. No dia só o Master usa |
 | Um agente ou equipe? QA? | **Um agente só, sem QA** |
+| Subdomínio no DuckDNS | `listagraduacao.duckdns.org` (VM `VM.Standard.A1.Flex`, 1 OCPU / 6 GB, rede `vcn-graduacao`) |
 
 ### Em aberto
 
-1. **Subdomínio no DuckDNS.** Definir na etapa de Publicação (depende de estar livre).
-   Sugestão: `graduacao-gbocidental.duckdns.org`.
+Nenhuma.
 
 ---
 
