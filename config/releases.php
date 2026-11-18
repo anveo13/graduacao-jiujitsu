@@ -2,8 +2,18 @@
 declare(strict_types=1);
 
 return [
-    'current' => '0.5.2',
+    'current' => '0.5.3',
     'releases' => [
+        [
+            'version' => '0.5.3',
+            'date' => '2026-11-18',
+            'title' => 'App no celular',
+            'changes' => [
+                'Dá para instalar o sistema na tela inicial do celular: abre em tela cheia, com o ícone do escudo GJ.',
+                'Dentro de cada faixa, a ordem vai do menor para o maior grau.',
+                'Na lista do evento, quem vai trocar de faixa fica sempre por último na faixa.',
+            ],
+        ],
         [
             'version' => '0.5.2',
             'date' => '2026-11-18',

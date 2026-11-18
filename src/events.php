@@ -105,7 +105,7 @@ function list_event_graduations(int $eventId, bool $showHidden = false): array
         FROM graduations g JOIN students s ON s.id=g.student_id
         LEFT JOIN users gb ON gb.id=g.graduated_by WHERE g.event_id=?";
     if (!$showHidden) $sql .= ' AND g.hidden=0';
-    $sql .= " ORDER BY is_done ASC,FIELD(g.from_belt,'white','orange','green','blue','purple','brown','black'),s.name,g.id";
+    $sql .= " ORDER BY is_done ASC,FIELD(g.from_belt,'white','orange','green','blue','purple','brown','black'),g.to_belt<>g.from_belt,g.from_degrees,g.to_degrees,s.name,g.id";
     $stmt = db()->prepare($sql);
     $stmt->execute([$eventId]);
     return $stmt->fetchAll();
@@ -133,7 +133,7 @@ function list_students_available_for_event(int $eventId): array
 {
     $stmt = db()->prepare("SELECT s.id,s.name,s.belt,s.degrees FROM students s
         WHERE s.active=1 AND NOT EXISTS (SELECT 1 FROM graduations g WHERE g.event_id=? AND g.student_id=s.id)
-        ORDER BY FIELD(s.belt,'white','orange','green','blue','purple','brown','black'),s.name");
+        ORDER BY FIELD(s.belt,'white','orange','green','blue','purple','brown','black'),s.degrees,s.name");
     $stmt->execute([$eventId]);
     return $stmt->fetchAll();
 }

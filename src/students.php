@@ -16,7 +16,7 @@ function list_active_students(string $search = ''): array
         $params[] = '%' . $escapedSearch . '%';
     }
 
-    $sql .= " ORDER BY FIELD(s.belt,'white','orange','green','blue','purple','brown','black'),s.name,s.id";
+    $sql .= " ORDER BY FIELD(s.belt,'white','orange','green','blue','purple','brown','black'),s.degrees,s.name,s.id";
     $stmt = db()->prepare($sql);
     $stmt->execute($params);
 

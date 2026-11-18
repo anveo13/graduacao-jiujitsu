@@ -13,6 +13,10 @@ require dirname(__DIR__).'/src/graduations.php';
 $releases = require dirname(__DIR__).'/config/releases.php';
 $cssVersion = (string)(filemtime(dirname(__DIR__).'/public/assets/app.css') ?: 0);
 $faviconVersion = (string)(filemtime(dirname(__DIR__).'/public/favicon.svg') ?: 0);
+// <head> comum (login, convite e sistema): ícones, manifesto e tags para instalar como app no celular.
+$appHead = '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#171717">'
+    .'<link rel="icon" type="image/svg+xml" href="/favicon.svg?v='.rawurlencode($faviconVersion).'"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest">'
+    .'<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Graduação"><meta name="apple-mobile-web-app-status-bar-style" content="black">';
 $page = (string) ($_GET['page'] ?? 'home');
 $method = (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET');
 $error = '';
@@ -236,7 +240,7 @@ if ($page === 'student-deactivate') {
 
 if ($page === 'login') {
     ?><!doctype html>
-    <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#c8102e"><link rel="icon" type="image/svg+xml" href="/favicon.svg?v=<?=rawurlencode($faviconVersion)?>"><title>Entrar · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css?v=<?=rawurlencode($cssVersion)?>"></head><body>
+    <html lang="pt-BR"><head><?=$appHead?><title>Entrar · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css?v=<?=rawurlencode($cssVersion)?>"></head><body>
     <main class="login-card"><div class="brand-mark">GJ</div><p class="eyebrow">CONTROLE DE GRADUAÇÕES</p><h1>Entrar</h1><p class="muted">Acesse sua conta para continuar.</p><?php if ($error !== ''): ?><p class="alert" role="alert"><?=h($error)?></p><?php endif; ?><form method="post" action="/?page=login"><?=csrf_field()?><label>Usuário<input name="username" autocomplete="username" maxlength="60" required autofocus></label><label>Senha<input type="password" name="password" autocomplete="current-password" required></label><button class="primary" type="submit">Entrar</button></form></main>
     </body></html><?php
     exit;
@@ -339,7 +343,7 @@ if ($user['role'] === 'master') {
 $profileIcon = '<circle cx="12" cy="8" r="4"/><path d="M4 21c.8-4 4-6.5 8-6.5s7.2 2.5 8 6.5"/>';
 $pageTitles = ['home' => 'Início', 'students' => 'Alunos', 'events' => 'Eventos', 'users' => 'Usuários', 'profile' => 'Meu perfil'];
 ?><!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#171717"><link rel="icon" type="image/svg+xml" href="/favicon.svg?v=<?=rawurlencode($faviconVersion)?>"><title><?=h($pageTitles[$activeNav])?> · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css?v=<?=rawurlencode($cssVersion)?>"></head><body>
+<html lang="pt-BR"><head><?=$appHead?><title><?=h($pageTitles[$activeNav])?> · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css?v=<?=rawurlencode($cssVersion)?>"></head><body>
 <header class="topbar">
     <a class="brand" href="/"><span class="brand-badge" aria-hidden="true">GJ</span><span class="brand-text">Graduação <span>Jiu-Jitsu</span></span></a>
     <nav class="main-nav" aria-label="Navegação principal">
