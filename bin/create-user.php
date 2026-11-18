@@ -2,9 +2,10 @@
 declare(strict_types=1);
 require dirname(__DIR__).'/src/bootstrap.php';
 if(PHP_SAPI!=='cli'){http_response_code(404);exit;}
-$username=$argv[1]??'gbocidental';$name=$argv[2]??'gbocidental';
-if($username!=='gbocidental'){fwrite(STDERR,"Only gbocidental can be the Master user.\n");exit(1);}
-if(trim($name)===''||strlen($name)>100){fwrite(STDERR,"Invalid name.\n");exit(1);}
+// Uso: php bin/create-user.php [usuario] [nome]. Cria ou atualiza um usuário Master (pode haver mais de um).
+$username=trim($argv[1]??'gbocidental');$name=trim($argv[2]??$username);
+if(preg_match('/^[A-Za-z0-9._-]{3,60}$/',$username)!==1){fwrite(STDERR,"Invalid username (3-60 letters, numbers, dot, dash or underscore).\n");exit(1);}
+if($name===''||mb_strlen($name,'UTF-8')>100){fwrite(STDERR,"Invalid name.\n");exit(1);}
 fwrite(STDOUT,'Password (at least 8 characters): ');
 if(PHP_OS_FAMILY!=='Windows')shell_exec('stty -echo');
 $password=rtrim((string)fgets(STDIN),"\r\n");

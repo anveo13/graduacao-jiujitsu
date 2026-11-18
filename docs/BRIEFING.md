@@ -42,7 +42,7 @@ migrations, deploy por `git push` e convites por link.
 | Acesso | **Login próprio** (usuário e senha). Nada a ver com o login do Carmelito's ou do MyMon |
 | Perfis | **Master**, **Administrador** e **Visualizador** (seção 3.6) |
 | Usuários novos | Entram por **convite** (link de uso único, enviado pelo WhatsApp), criado pelo Master |
-| Usuário inicial | `gbocidental`, perfil **Master**, criado por comando no servidor |
+| Masters | `gbocidental` e `anveo`, criados por comando no servidor (`create-user.php`) |
 | Quem fez o quê | Os registros mostram "alterado por" e "graduado por" |
 | Versões | Numeradas (0.1.0, 0.2.0…), com lista de novidades, como no MyMon |
 | QA | **Sem etapa de QA** e sem documentos de QA: o projeto é simples. Ficam só os testes automáticos da regra de elegibilidade |
@@ -171,8 +171,9 @@ Se o evento passar, a graduação planejada fica parada no evento antigo. O bot�
 | Graduação avulsa ("graduar agora") | sim | sim | não |
 | Usuários e convites | sim | não | não |
 
-- Existe **um único Master**: o `gbocidental`. Ele não pode ser rebaixado nem desativado,
-  e não existe convite para Master.
+- Pode haver **mais de um Master** (hoje: `gbocidental` e `anveo`). Master só é criado por
+  comando no servidor (`php bin/create-user.php usuario "Nome"`); não existe convite para Master.
+  Pela tela, um Master não pode ser rebaixado nem desativado.
 - A permissão é conferida **no servidor**, em toda ação. Esconder o botão na tela não basta.
 - Tudo que um usuário grava fica com o nome dele: os registros mostram embaixo
   "alterado por Fulano em dd/mm/aaaa" e, nas graduações, "graduado por Fulano".
@@ -547,7 +548,7 @@ só aparecem em fevereiro.
 | Primeiro usuário | `gbocidental`, Master |
 | Visualizador pode desfazer check? | Só o que ele mesmo deu |
 | Convite pede e-mail? | Não. Nome, usuário e senha; vale 7 dias |
-| Pode haver outro Master? | Não. Só o `gbocidental` |
+| Pode haver outro Master? | Sim (revisto em 18/11/2026). `gbocidental` e `anveo`, criados por comando |
 | Convites antes de 04/12? | Não. No dia só o Master usa |
 | Um agente ou equipe? QA? | **Um agente só, sem QA** |
 | Subdomínio no DuckDNS | `listagraduacao.duckdns.org` (VM `VM.Standard.A1.Flex`, 1 OCPU / 6 GB, rede `vcn-graduacao`) |

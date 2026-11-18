@@ -2,8 +2,20 @@
 declare(strict_types=1);
 
 return [
-    'current' => '0.5.0',
+    'current' => '0.5.1',
     'releases' => [
+        [
+            'version' => '0.5.1',
+            'date' => '2026-11-18',
+            'title' => 'Menu novo',
+            'changes' => [
+                'Menu refeito: no computador fica no topo, com a página atual marcada; no celular vira uma barra fixa embaixo, com ícones.',
+                'Novo link Início no menu. Tocar no seu nome (ou em Perfil, no celular) abre o Meu perfil.',
+                'Pode haver mais de um usuário Master.',
+                'Início: "Elegível desde" agora mostra a data em que o prazo venceu, e não a da última graduação.',
+                'Layout do Início e da ficha do aluno no celular corrigido.',
+            ],
+        ],
         [
             'version' => '0.5.0',
             'date' => '2026-11-18',

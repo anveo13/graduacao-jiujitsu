@@ -137,6 +137,8 @@ sudo -u graduacao -H php /var/www/graduacao/bin/migrate.php
 sudo -u graduacao -H php /var/www/graduacao/bin/create-user.php
 ```
 
+Para outro Master: `sudo -u graduacao -H php /var/www/graduacao/bin/create-user.php usuario "Nome"`.
+
 O segundo comando cria `gbocidental` como Master e solicita a senha sem gravá-la em arquivo
 do projeto. Abra `https://listagraduacao.duckdns.org` e confirme o login.
 

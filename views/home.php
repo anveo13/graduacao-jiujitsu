@@ -14,7 +14,7 @@ foreach ($dashboardStudents as $item) {
     <div class="dashboard-heading"><div><p class="eyebrow">ELEGIBILIDADE</p><h2>Já podem ser graduados</h2></div><span class="count-pill"><?=count($eligibleNow)?></span></div>
     <?php if ($eligibleNow===[]): ?><p class="dashboard-empty">Nenhum aviso de elegibilidade no momento.</p><?php else: ?><div class="dashboard-list">
         <?php foreach ($eligibleNow as $item): $student=$item['student']; ?>
-            <a class="dashboard-student" href="/?page=student&id=<?=(int)$student['id']?>"><span><strong><?=h($student['name'])?></strong><small><?=h(belt_label($student['belt']))?> · <?=(int)$student['degrees']?>°</small></span><small>Elegível desde <?=h((new DateTimeImmutable($student['last_graduation_at'],new DateTimeZone('America/Sao_Paulo')))->format('d/m/Y'))?></small></a>
+            <a class="dashboard-student" href="/?page=student&id=<?=(int)$student['id']?>"><span><strong><?=h($student['name'])?></strong><small><?=h(belt_label($student['belt']))?> · <?=(int)$student['degrees']?>°</small></span><small>Elegível desde <?=h((new DateTimeImmutable($item['eligibility']['eligible_at'],new DateTimeZone('America/Sao_Paulo')))->format('d/m/Y'))?></small></a>
         <?php endforeach; ?>
     </div><?php endif; ?>
 </section>
