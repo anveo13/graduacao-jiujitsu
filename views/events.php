@@ -3,7 +3,7 @@ declare(strict_types=1);
 $todayForForm = (new DateTimeImmutable('today', new DateTimeZone('America/Sao_Paulo')))->format('Y-m-d');
 ?>
 <section class="page-heading">
-    <div><p class="eyebrow">PLANEJAMENTO</p><h1>Graduações</h1><p class="muted">Organize os alunos por evento e acompanhe os checks no dia.</p></div>
+    <div><p class="eyebrow">GRADUAÇÕES</p><h1>Eventos</h1><p class="muted">Organize os alunos por evento e acompanhe os checks no dia.</p></div>
 </section>
 <?php if ($error !== ''): ?><p class="alert" role="alert"><?=h($error)?></p><?php endif; ?>
 <?php if ($canManageEvents): ?>

@@ -27,3 +27,11 @@ function belt_label(string $belt): string
 {
     return belt_names()[$belt] ?? 'Faixa inválida';
 }
+
+/** Faixa e graus para a tela: "Azul", "Azul 1 grau", "Azul 2 graus" (0 grau mostra só a faixa). */
+function belt_rank(string $belt, int $degrees): string
+{
+    $label = belt_label($belt);
+    if ($degrees <= 0) return $label;
+    return $label.' '.$degrees.' '.($degrees === 1 ? 'grau' : 'graus');
+}

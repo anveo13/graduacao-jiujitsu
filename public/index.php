@@ -331,21 +331,21 @@ $activeNav = match (true) {
 $navItems = [
     'home' => ['/', 'Início', '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'],
     'students' => ['/?page=students', 'Alunos', '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-6 6.5-6s5.9 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3.2 3 3.5 6"/>'],
-    'events' => ['/?page=events', 'Graduações', '<circle cx="12" cy="9" r="5"/><path d="m8.5 13-2 8 5.5-3 5.5 3-2-8"/>'],
+    'events' => ['/?page=events', 'Eventos', '<circle cx="12" cy="9" r="5"/><path d="m8.5 13-2 8 5.5-3 5.5 3-2-8"/>'],
 ];
 if ($user['role'] === 'master') {
     $navItems['users'] = ['/?page=users', 'Usuários', '<path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/>'];
 }
-$navItems['profile'] = ['/?page=profile', 'Perfil', '<circle cx="12" cy="8" r="4"/><path d="M4 21c.8-4 4-6.5 8-6.5s7.2 2.5 8 6.5"/>'];
-$pageTitles = ['home' => 'Início', 'students' => 'Alunos', 'events' => 'Graduações', 'users' => 'Usuários', 'profile' => 'Meu perfil'];
+$profileIcon = '<circle cx="12" cy="8" r="4"/><path d="M4 21c.8-4 4-6.5 8-6.5s7.2 2.5 8 6.5"/>';
+$pageTitles = ['home' => 'Início', 'students' => 'Alunos', 'events' => 'Eventos', 'users' => 'Usuários', 'profile' => 'Meu perfil'];
 ?><!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#171717"><link rel="icon" type="image/svg+xml" href="/favicon.svg?v=<?=rawurlencode($faviconVersion)?>"><title><?=h($pageTitles[$activeNav])?> · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css?v=<?=rawurlencode($cssVersion)?>"></head><body>
 <header class="topbar">
     <a class="brand" href="/"><span class="brand-badge" aria-hidden="true">GJ</span><span class="brand-text">Graduação <span>Jiu-Jitsu</span></span></a>
     <nav class="main-nav" aria-label="Navegação principal">
-        <?php foreach ($navItems as $key => [$href, $label, $icon]): ?><a class="<?=$key==='profile'?'nav-profile':''?><?=$key===$activeNav?' is-active':''?>" href="<?=h($href)?>"<?=$key===$activeNav?' aria-current="page"':''?>><svg viewBox="0 0 24 24" aria-hidden="true"><?=$icon?></svg><span><?=h($label)?></span></a><?php endforeach; ?>
+        <?php foreach ($navItems as $key => [$href, $label, $icon]): ?><a class="<?=$key===$activeNav?'is-active':''?>" href="<?=h($href)?>"<?=$key===$activeNav?' aria-current="page"':''?>><svg viewBox="0 0 24 24" aria-hidden="true"><?=$icon?></svg><span><?=h($label)?></span></a><?php endforeach; ?>
     </nav>
-    <div class="account"><a class="account-link" href="/?page=profile" title="Meu perfil"><strong><?=h($user['name'])?></strong><small><?=h($roleNames[$user['role']]??$user['role'])?></small></a><form method="post" action="/?page=logout"><?=csrf_field()?><button class="logout" type="submit">Sair</button></form></div>
+    <div class="account"><a class="account-link<?=$activeNav==='profile'?' is-active':''?>" href="/?page=profile" title="Meu perfil"><svg viewBox="0 0 24 24" aria-hidden="true"><?=$profileIcon?></svg><span><strong><?=h($user['name'])?></strong><small><?=h($roleNames[$user['role']]??$user['role'])?></small></span></a><form method="post" action="/?page=logout"><?=csrf_field()?><button class="logout" type="submit">Sair</button></form></div>
 </header>
 <main class="content">
     <?php if ($notice !== ''): ?><p class="success-message" role="status"><?=h($notice)?></p><?php endif; ?>

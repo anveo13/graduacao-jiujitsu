@@ -51,6 +51,9 @@ $assertSame('belt:blue', suggested_graduation_target('white', 4), 'Sugestão par
 $assertSame('degree:1', suggested_graduation_target('white', 2), 'Sugestão de mais um grau');
 $assertSame(null, suggested_graduation_target('black', 6), 'Faixa preta no grau máximo sem sugestão');
 $assertSame(null, suggested_graduation_target('black', 4), 'Sem sugestão de nova faixa para a faixa preta');
+$assertSame('Roxa', belt_rank('purple', 0), 'Faixa com 0 grau mostra só a faixa');
+$assertSame('Branca 1 grau', belt_rank('white', 1), 'Faixa com 1 grau');
+$assertSame('Preta 3 graus', belt_rank('black', 3), 'Faixa com vários graus');
 $assertSame(['belt'=>'white','degrees'=>4], resolve_graduation_target('white',2,'degree:2'), 'Escolha de dois graus');
 $assertSame(['belt'=>'purple','degrees'=>0], resolve_graduation_target('blue',4,'belt:purple'), 'Troca de faixa zera os graus');
 $assertThrows(static fn() => resolve_graduation_target('white',4,'degree:1'), 'Não ultrapassa o limite da faixa');

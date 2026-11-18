@@ -2,8 +2,22 @@
 declare(strict_types=1);
 
 return [
-    'current' => '0.5.1',
+    'current' => '0.5.2',
     'releases' => [
+        [
+            'version' => '0.5.2',
+            'date' => '2026-11-18',
+            'title' => 'Navegação mais clara',
+            'changes' => [
+                'A aba "Graduações" agora se chama "Eventos".',
+                'No evento, a lista vem primeiro; "+ Adicionar aluno" abre o formulário só quando precisa.',
+                'Todas as telas têm um "‹ Voltar" no mesmo lugar, acima do título.',
+                'No evento, tocar no nome do aluno abre a ficha dele, e o Voltar da ficha devolve para o evento.',
+                'No celular, o Perfil saiu da barra de baixo e virou o ícone de pessoa no topo.',
+                'Quem troca de faixa aparece só com a faixa (ex.: "Roxa"), sem o "0°".',
+                'Início: a Agenda vem primeiro, e todos os blocos abrem e fecham (o aparelho lembra a escolha).',
+            ],
+        ],
         [
             'version' => '0.5.1',
             'date' => '2026-11-18',

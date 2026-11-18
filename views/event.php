@@ -4,22 +4,25 @@ $eventDate = new DateTimeImmutable($event['event_date'], new DateTimeZone('Ameri
 $pendingCount = $progress['planned'];
 $doneCount = $progress['done'];
 ?>
+<a class="back-link" href="/?page=events">‹ Eventos</a>
 <section class="page-heading">
     <div><p class="eyebrow">EVENTO · <?=h($eventDate->format('d/m/Y'))?></p><h1><?=h($event['name'])?></h1><p class="muted"><?=$doneCount?> de <?=$doneCount+$pendingCount?> graduados<?= $showHidden ? ' · mostrando escondidos' : '' ?></p></div>
-    <a class="secondary-link" href="/?page=events">Todos os eventos</a>
 </section>
 <?php if ($error !== ''): ?><p class="alert" role="alert"><?=h($error)?></p><?php endif; ?>
 
 <?php if ($canManageEvents && $availableStudents !== []): ?>
+<?php // Fechado por padrão para a lista vir primeiro; fica aberto logo depois de adicionar, para adicionar o próximo. ?>
+<details class="event-add"<?=isset($_GET['added'])||$error!==''?' open':''?>>
+<summary class="secondary">+ Adicionar aluno</summary>
 <form class="event-add-form" method="post" action="/?page=event-add-student">
     <?=csrf_field()?> <input type="hidden" name="event_id" value="<?=(int)$event['id']?>">
-    <h2>Adicionar aluno</h2>
     <label>Aluno<select name="student_id" id="event-student" required><option value="">Selecione um aluno</option>
-        <?php foreach ($availableStudents as $student): ?><option value="<?=(int)$student['id']?>" data-belt="<?=h($student['belt'])?>" data-degrees="<?=(int)$student['degrees']?>"><?=h($student['name'])?> · <?=h(belt_label($student['belt']))?> <?=(int)$student['degrees']?>°</option><?php endforeach; ?>
+        <?php foreach ($availableStudents as $student): ?><option value="<?=(int)$student['id']?>" data-belt="<?=h($student['belt'])?>" data-degrees="<?=(int)$student['degrees']?>"><?=h($student['name'])?> · <?=h(belt_rank($student['belt'],(int)$student['degrees']))?></option><?php endforeach; ?>
     </select></label>
     <label>Próxima graduação<select name="target" id="event-target" required disabled><option value="">Primeiro selecione o aluno</option></select></label>
     <button class="primary" type="submit">Adicionar à lista</button>
 </form>
+</details>
 <?php elseif ($canManageEvents): ?>
 <p class="form-hint event-all-added">Todos os alunos ativos já estão na lista deste evento.</p>
 <?php endif; ?>
@@ -38,7 +41,7 @@ $doneCount = $progress['done'];
         <?php foreach ($rows as $row): ?>
             <?php $eligibility=student_eligibility($row['current_belt'],(int)$row['current_degrees'],$row['last_graduation_at'],$eventDate); $undoAllowed=$user['role']!=='viewer'||(int)$row['graduated_by_id']===(int)$user['id']; ?>
             <article class="graduation-card <?=$row['status']==='done'?'is-done':''?> <?=$row['hidden']?'is-hidden':''?>">
-                <div class="graduation-person"><h3><?=h($row['student_name'])?></h3><p><?=h(belt_label($row['from_belt']))?> <?=(int)$row['from_degrees']?>° <span aria-hidden="true">→</span> <strong><?=h(belt_label($row['to_belt']))?> <?=(int)$row['to_degrees']?>°</strong></p>
+                <div class="graduation-person"><h3><a class="student-name-link" href="/?page=student&id=<?=(int)$row['student_id']?>&evento=<?=(int)$event['id']?>"><?=h($row['student_name'])?></a></h3><p><?=h(belt_rank($row['from_belt'],(int)$row['from_degrees']))?> <span aria-hidden="true">→</span> <strong><?=h(belt_rank($row['to_belt'],(int)$row['to_degrees']))?></strong></p>
                     <?php if ($row['status']==='done'): ?><small class="graduation-by">Graduado por <?=h($row['graduated_by_name']??'usuário')?></small>
                     <?php elseif (!$eligibility['eligible'] && $eligibility['eligible_at']!==null): ?><small class="eligibility waiting">Ainda não elegível; a partir de <?=h((new DateTimeImmutable($eligibility['eligible_at'],new DateTimeZone('America/Sao_Paulo')))->format('d/m/Y'))?></small><?php endif; ?>
                 </div>
@@ -67,7 +70,7 @@ $doneCount = $progress['done'];
 <?php $doneRows=array_values(array_filter($graduations,static fn(array $row):bool=>$row['status']==='done')); if ($doneRows!==[]): ?>
 <section class="belt-group done-group"><h2>Já graduados <span><?=count($doneRows)?></span></h2><div class="graduation-list">
     <?php foreach ($doneRows as $row): $undoAllowed=$user['role']!=='viewer'||(int)$row['graduated_by_id']===(int)$user['id']; ?>
-        <article class="graduation-card is-done"><div class="graduation-person"><h3><?=h($row['student_name'])?></h3><p><?=h(belt_label($row['from_belt']))?> <?=(int)$row['from_degrees']?>° <span aria-hidden="true">→</span> <strong><?=h(belt_label($row['to_belt']))?> <?=(int)$row['to_degrees']?>°</strong></p><small class="graduation-by">Graduado por <?=h($row['graduated_by_name']??'usuário')?></small></div>
+        <article class="graduation-card is-done"><div class="graduation-person"><h3><a class="student-name-link" href="/?page=student&id=<?=(int)$row['student_id']?>&evento=<?=(int)$event['id']?>"><?=h($row['student_name'])?></a></h3><p><?=h(belt_rank($row['from_belt'],(int)$row['from_degrees']))?> <span aria-hidden="true">→</span> <strong><?=h(belt_rank($row['to_belt'],(int)$row['to_degrees']))?></strong></p><small class="graduation-by">Graduado por <?=h($row['graduated_by_name']??'usuário')?></small></div>
             <?php if ($undoAllowed): ?><div class="graduation-actions"><form method="post" action="/?page=event-undo" data-confirm="Desfazer o check de <?=h($row['student_name'])?>? O aluno volta para a lista pendente.">
                 <?=csrf_field()?> <input type="hidden" name="event_id" value="<?=(int)$event['id']?>"><input type="hidden" name="graduation_id" value="<?=(int)$row['id']?>"><button class="text-button danger" type="submit">Desfazer</button>
             </form></div><?php endif; ?>

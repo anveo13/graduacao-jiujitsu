@@ -5,6 +5,7 @@ $formName = (string)($formValues['name'] ?? $student['name'] ?? '');
 $formBelt = (string)($formValues['belt'] ?? $student['belt'] ?? 'white');
 $formDegrees = (string)($formValues['degrees'] ?? $student['degrees'] ?? '0');
 ?>
+<?php if ($isEditing): ?><a class="back-link" href="/?page=student&id=<?=(int)$student['id']?>">‹ <?=h($student['name'])?></a><?php else: ?><a class="back-link" href="/?page=students">‹ Alunos</a><?php endif; ?>
 <section class="page-heading">
     <div><p class="eyebrow">EQUIPE</p><h1><?= $isEditing ? 'Editar aluno' : 'Cadastrar aluno' ?></h1><p class="muted">Informe a faixa e os graus atuais.</p></div>
 </section>
@@ -20,7 +21,7 @@ $formDegrees = (string)($formValues['degrees'] ?? $student['degrees'] ?? '0');
         <?php for ($degree=0; $degree<=($formBelt==='black'?6:4); $degree++): ?><option value="<?=$degree?>" <?=(string)$degree===$formDegrees?'selected':''?>><?=$degree?></option><?php endfor; ?>
     </select></label>
     <?php if ($isEditing && $student['last_graduation_at'] !== null): ?><p class="form-hint">Última graduação registrada: <?=h((new DateTimeImmutable($student['last_graduation_at'], $timezone))->format('d/m/Y'))?>. Essa data é atualizada quando uma graduação for registrada.</p><?php endif; ?>
-    <div class="form-actions"><button class="primary" type="submit">Salvar aluno</button><a class="secondary-link" href="/?page=students">Cancelar</a></div>
+    <div class="form-actions"><button class="primary" type="submit">Salvar aluno</button><a class="secondary-link" href="<?= $isEditing ? '/?page=student&id='.(int)$student['id'] : '/?page=students' ?>">Cancelar</a></div>
 </form>
 <script>
 const beltSelect=document.getElementById('student-belt');
