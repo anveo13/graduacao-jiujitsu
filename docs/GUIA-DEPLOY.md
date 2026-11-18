@@ -57,8 +57,8 @@ Menu ☰ › **Compute** › **Instances** › **Create instance**.
 3. **Image and shape** › **Edit**:
    - **Image** › **Change image** › **Ubuntu** › **Canonical Ubuntu 24.04** (a normal, não a
      "Minimal") › **Select image**.
-   - **Shape** › **Change shape** › **Specialty and previous generation** ›
-     `VM.Standard.E2.1.Micro` › confira o selo **Always Free-eligible** › **Select shape**.
+   - **Shape** › **Change shape** › `VM.Standard.A1.Flex` › configure **1 OCPU** e **6 GB** ›
+     confira o selo **Always Free-eligible** › **Select shape**.
 4. **Networking**:
    - **Select existing virtual cloud network** › `vcn-graduacao`
    - **Select existing subnet** › **public subnet-vcn-graduacao** (a pública, não a privada)

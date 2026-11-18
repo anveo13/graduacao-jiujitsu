@@ -1,8 +1,8 @@
 # Briefing — Graduação Jiu-Jitsu
 
-**Situação:** só planejado. Nada foi criado ainda além deste arquivo.
+**Situação:** versão 0.1.0 publicada em `https://listagraduacao.duckdns.org/`. A versão 0.2.0 está em preparação local.
 **Escrito em:** 17/11/2026, a partir da conversa feita dentro do projeto Carmelito's.
-**Revisado em:** 17/11/2026 — dúvidas fechadas, perfis e convites incluídos, ordem de construção trocada.
+**Revisado em:** 18/11/2026 — 0.1.0 publicada; VM A1 Flex e subdomínio configurados.
 **Primeiro evento real:** graduação de **04/12/2026**.
 
 > **Para começar numa conversa nova** (Claude Code, Codex ou outro agente): abra esta pasta
@@ -436,8 +436,8 @@ PC --git push--> GitHub --> servidor: graduacao-deploy (backup → git pull → 
 
 ### 7.1 Decisão: VM nova, só para este projeto
 
-- O Always Free da Oracle inclui **duas** VMs `E2.1.Micro`. Conferir o selo
-  "Always Free-eligible" na hora de criar.
+- A VM publicada usa `VM.Standard.A1.Flex` com **1 OCPU e 6 GB de memória**, em Ubuntu 24.04.
+  A VCN é `vcn-graduacao`, com a subnet pública `public subnet-vcn-graduacao`.
 - Reaproveita quase inteiro o `provision.sh` do MyMon, trocando nomes
   (`mymon` → `graduacao`) e tirando o que este projeto não usa.
 - **Nenhum risco para o MyMon**, que guarda dados financeiros. Nada da VM do MyMon é tocado.
@@ -449,7 +449,7 @@ Segue o `MyMon/docs/GUIA-DEPLOY.md`, com os nomes trocados. Resumo:
 
 1. **DuckDNS**: entrar com a conta do GitHub e criar um subdomínio novo
    (cada conta tem direito a 5). O token é o mesmo da conta.
-2. **Oracle**: criar a VM (Ubuntu 24.04, `E2.1.Micro`, IP público, baixar a chave SSH).
+2. **Oracle**: VM Ubuntu 24.04 `VM.Standard.A1.Flex` (1 OCPU / 6 GB), IP público e chave SSH baixada.
 3. **Rede da Oracle**: liberar as portas 80 e 443 na Security List.
 4. **DuckDNS**: apontar o subdomínio para o IP da VM.
 5. **SSH**: guardar a chave em `C:\Users\nan13\.ssh\` e criar o atalho `ssh graduacao`.
