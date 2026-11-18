@@ -10,6 +10,7 @@ require dirname(__DIR__).'/src/events.php';
 require dirname(__DIR__).'/src/users.php';
 
 $releases = require dirname(__DIR__).'/config/releases.php';
+$cssVersion = (string)(filemtime(dirname(__DIR__).'/public/assets/app.css') ?: 0);
 $page = (string) ($_GET['page'] ?? 'home');
 $method = (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET');
 $error = '';
@@ -207,7 +208,7 @@ if ($page === 'student-deactivate') {
 
 if ($page === 'login') {
     ?><!doctype html>
-    <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#17352c"><title>Entrar · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css"></head><body>
+    <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#17352c"><title>Entrar · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css?v=<?=rawurlencode($cssVersion)?>"></head><body>
     <main class="login-card"><div class="brand-mark">GJ</div><p class="eyebrow">CONTROLE DE GRADUAÇÕES</p><h1>Entrar</h1><p class="muted">Acesse sua conta para continuar.</p><?php if ($error !== ''): ?><p class="alert" role="alert"><?=h($error)?></p><?php endif; ?><form method="post" action="/?page=login"><?=csrf_field()?><label>Usuário<input name="username" autocomplete="username" maxlength="60" required autofocus></label><label>Senha<input type="password" name="password" autocomplete="current-password" required></label><button class="primary" type="submit">Entrar</button></form></main>
     </body></html><?php
     exit;
@@ -281,7 +282,7 @@ if (!isset($view)) {
 }
 
 ?><!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#17352c"><title><?= in_array($view,['students','student-form'],true) ? 'Alunos' : (in_array($view,['events','event'],true) ? 'Graduações' : ($view==='users'?'Usuários':($view==='profile'?'Meu perfil':'Início'))) ?> · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css"></head><body>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#17352c"><title><?= in_array($view,['students','student-form'],true) ? 'Alunos' : (in_array($view,['events','event'],true) ? 'Graduações' : ($view==='users'?'Usuários':($view==='profile'?'Meu perfil':'Início'))) ?> · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css?v=<?=rawurlencode($cssVersion)?>"></head><body>
 <header class="topbar"><a class="brand" href="/">Graduação <span>Jiu-Jitsu</span></a><nav class="main-nav" aria-label="Navegação principal"><a href="/?page=students">Alunos</a><a href="/?page=events">Graduações</a><?php if ($user['role']==='master'): ?><a href="/?page=users">Usuários</a><?php endif; ?><a href="/?page=profile">Meu perfil</a></nav><div class="account"><span><?=h($user['name'])?><small><?=h($roleNames[$user['role']]??$user['role'])?></small></span><form method="post" action="/?page=logout"><?=csrf_field()?><button class="logout" type="submit">Sair</button></form></div></header>
 <main class="content">
     <?php if ($view === 'home'): ?><section class="welcome"><p class="eyebrow">PAINEL</p><h1>Olá, <?=h($user['name'])?>.</h1><p>Seu espaço para acompanhar as graduações da equipe.</p></section><section class="empty-state"><div class="belt-icon" aria-hidden="true">🥋</div><h2>Cadastro da equipe</h2><p>Consulte os alunos, confira as faixas e mantenha os cadastros em dia.</p><a class="primary-link" href="/?page=students">Ver alunos</a><p class="home-role"><span class="badge"><?= $user['role']==='viewer'?'Acesso de visualização':'Perfil com edição' ?></span></p></section>
