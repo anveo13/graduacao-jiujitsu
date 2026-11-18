@@ -2,8 +2,17 @@
 declare(strict_types=1);
 
 return [
-    'current' => '0.4.0',
+    'current' => '0.4.1',
     'releases' => [
+        [
+            'version' => '0.4.1',
+            'date' => '2026-11-18',
+            'title' => 'Identidade visual vermelha',
+            'changes' => [
+                'Paleta atualizada com vermelho, preto e branco inspirados nas cores da equipe.',
+                'Favicon GJ em SVG criado para as telas e a aba do navegador.',
+            ],
+        ],
         [
             'version' => '0.4.0',
             'date' => '2026-11-18',

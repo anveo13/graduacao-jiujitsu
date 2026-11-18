@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <path fill="#c8102e" d="M9 5h46v28c0 12-8.6 21.1-23 27C17.6 54.1 9 45 9 33V5Z"/>
+  <path fill="none" stroke="#fff" stroke-width="2.5" d="M14 10h36v23c0 9.5-6.8 16.8-18 21.7C20.8 49.8 14 42.5 14 33V10Z"/>
+  <text x="32" y="39" fill="#fff" font-family="Arial,sans-serif" font-size="21" font-weight="800" letter-spacing="-1" text-anchor="middle">GJ</text>
+</svg>
