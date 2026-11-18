@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SCRIPT_FILE="$(readlink -f -- "${BASH_SOURCE[0]}")"
+APP_DIR="$(cd "$(dirname "$SCRIPT_FILE")/.." && pwd)"
 cd "$APP_DIR"
 
 [[ "$(id -un)" == graduacao ]] || { echo 'Execute como usuário graduacao.' >&2; exit 1; }

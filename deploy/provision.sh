@@ -20,7 +20,7 @@ apt-get install -y ca-certificates curl git openssh-client gnupg openssl iptable
 timedatectl set-timezone America/Sao_Paulo
 getent group graduacao-web >/dev/null || groupadd --system graduacao-web
 id "$APP_USER" >/dev/null 2>&1 || useradd --system --create-home --home-dir "/home/$APP_USER" --shell /bin/bash "$APP_USER"
-install -d -o "$APP_USER" -g "$APP_USER" -m 0750 "$APP_DIR"
+install -d -o "$APP_USER" -g graduacao-web -m 0710 "$APP_DIR"
 install -d -m 0750 "$ETC_DIR"; install -d -o "$APP_USER" -g "$APP_USER" -m 0700 /var/backups/graduacao
 if [[ ! -f "$ETC_DIR/duckdns.curl" ]]; then
  cat > "$ETC_DIR/duckdns.curl" <<EOF
@@ -101,6 +101,7 @@ Host github.com
 EOF
 chown "$APP_USER:$APP_USER" "/home/$APP_USER/.ssh/config"; chmod 0600 "/home/$APP_USER/.ssh/config"
 if [[ ! -d "$APP_DIR/.git" ]]; then runuser -u "$APP_USER" -- git clone "$REPO" "$APP_DIR" || echo "Clone pendente: cadastre a chave pública no GitHub e rode novamente."; fi
+chgrp graduacao-web "$APP_DIR"; chmod 0710 "$APP_DIR"
 if [[ -d "$APP_DIR/.git" && ! -f "$APP_DIR/.env" ]]; then
  cat > "$APP_DIR/.env" <<EOF
 APP_ENV=production
