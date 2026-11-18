@@ -190,7 +190,7 @@ Persistent=true
 WantedBy=timers.target
 EOF
 systemctl daemon-reload; systemctl enable --now graduacao-duckdns.timer
-if [[ -d "$APP_DIR/.git" ]]; then chmod 0755 "$APP_DIR/deploy/deploy.sh"; ln -sfn "$APP_DIR/deploy/deploy.sh" /usr/local/bin/graduacao-deploy; fi
+if [[ -d "$APP_DIR/.git" ]]; then bash "$APP_DIR/deploy/install-auto-deploy.sh"; fi
 echo "Provisionamento concluído para $DOMAIN"
 echo "Cadastre a chave pública abaixo como Deploy Key (somente leitura) no GitHub:"
 cat "/home/$APP_USER/.ssh/id_ed25519.pub"

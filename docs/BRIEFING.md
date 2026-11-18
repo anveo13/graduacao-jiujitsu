@@ -429,9 +429,9 @@ celular/PC --HTTPS--> NOME.duckdns.org --> IP da VM (Oracle)
                                           │    └─ só mostra /var/www/graduacao/public
                                           ├─ PHP 8.3-FPM (usuário "graduacao")
                                           ├─ MariaDB (banco "graduacao", só local)
-                                          └─ timers: backup diário · DuckDNS a cada 5 min
+                                          └─ timers: backup diário · DuckDNS e deploy a cada 5 min
 
-PC --git push--> GitHub --> servidor: graduacao-deploy (backup → git pull → migrate → reload)
+PC --git push--> GitHub <-- verificação a cada 5 min -- VM: backup → git pull → migrate → reload
 ```
 
 ### 7.1 Decisão: VM nova, só para este projeto
@@ -459,8 +459,10 @@ Segue o `MyMon/docs/GUIA-DEPLOY.md`, com os nomes trocados. Resumo:
 7. **GitHub**: cadastrar a *deploy key* do servidor no repositório (somente leitura).
 8. **Primeira instalação**: criar o `.env`, rodar `migrate` e `create-user`
    (cria o `gbocidental` como Master; a senha é digitada na hora).
-9. **Atualizações**: `git push` no PC e `graduacao-deploy` no servidor
-   (ou deploy automático pelo GitHub Actions, como no MyMon).
+9. **Atualizações**: o timer `graduacao-deploy-check.timer` verifica `main` a cada cinco minutos
+   usando a deploy key somente de leitura da VM. Na VM já publicada, ativar uma vez com
+   `sudo bash /var/www/graduacao/deploy/install-auto-deploy.sh`; depois, cada `git push` para
+   `main` será publicado automaticamente em até cerca de cinco minutos.
 
 Os passos 1 a 5 e o 7 são feitos pelo dono, no navegador. O agente guia e confere.
 

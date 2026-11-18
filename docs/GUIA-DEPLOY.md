@@ -142,10 +142,31 @@ do projeto. Abra `https://listagraduacao.duckdns.org` e confirme o login.
 
 ## 6. Atualizações e backup
 
-Depois de enviar uma alteração para `main`, conecte-se à VM e rode `graduacao-deploy`.
-O comando gera um backup antes de atualizar o código, aplica migrations e recarrega PHP-FPM.
-Backups compactados ficam em `/var/backups/graduacao`, com retenção de sete dias; o timer
-roda diariamente às 03:00 no fuso de São Paulo. O timer DuckDNS atualiza o IP a cada cinco
-minutos.
+O timer `graduacao-deploy-check.timer` consulta a branch `main` do GitHub a cada cinco
+minutos. Quando encontra um commit novo, executa o mesmo fluxo do comando manual: backup,
+`git pull --ff-only`, migrations e reload do PHP-FPM. A VM usa sua deploy key somente de
+leitura já cadastrada no GitHub; não é necessário abrir SSH para os servidores do GitHub,
+criar outra chave ou configurar secrets.
+
+Na instalação já feita, depois de enviar esta alteração ao GitHub, ative o timer uma vez:
+
+```bash
+sudo bash /var/www/graduacao/deploy/install-auto-deploy.sh
+```
+
+Confirme que está ativo e veja os registros com:
+
+```bash
+systemctl status graduacao-deploy-check.timer
+sudo journalctl -u graduacao-deploy-check.service -n 30 --no-pager
+```
+
+Depois disso, basta fazer `git push` para `main`; o site atualiza em até cerca de cinco
+minutos. O deploy também pode ser iniciado manualmente com `graduacao-deploy`.
+
+O comando remoto gera backup antes de atualizar o código, aplica migrations e recarrega
+PHP-FPM. Backups compactados ficam em `/var/backups/graduacao`, com retenção de sete dias;
+o timer roda diariamente às 03:00 no fuso de São Paulo. O timer DuckDNS atualiza o IP a cada
+cinco minutos.
 
 Oracle também exige a regra de rede para 80/443; o firewall da VM não substitui essa regra.
