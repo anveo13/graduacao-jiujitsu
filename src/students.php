@@ -40,6 +40,18 @@ function find_student(int $id): ?array
     return $student?:null;
 }
 
+/** Últimas graduações realizadas de todos os alunos (mais recente primeiro). */
+function list_recent_graduations(int $limit): array
+{
+    $stmt=db()->prepare("SELECT g.id,g.student_id,g.event_id,g.from_belt,g.from_degrees,g.to_belt,g.to_degrees,g.graduated_at,
+        s.name AS student_name,u.name AS graduated_by_name,e.name AS event_name
+        FROM graduations g JOIN students s ON s.id=g.student_id LEFT JOIN users u ON u.id=g.graduated_by LEFT JOIN events e ON e.id=g.event_id
+        WHERE g.status='done' ORDER BY g.graduated_at DESC,g.id DESC LIMIT ?");
+    $stmt->bindValue(1,$limit,PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
+
 function list_student_graduations(int $studentId): array
 {
     $stmt=db()->prepare("SELECT g.id,g.event_id,g.from_belt,g.from_degrees,g.to_belt,g.to_degrees,g.graduated_at,g.graduated_by,

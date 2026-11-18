@@ -357,6 +357,11 @@ if (!isset($view)) {
     } elseif ($page === 'home') {
         $dashboardStudents=list_dashboard_students();
         $nextEvent=find_next_event($today->format('Y-m-d'));
+        // Últimas graduações: 20 por vez; "Mostrar mais" pede mais 20 (?ultimas=40, 60...).
+        $recentLimit=min(1000,max(20,(int)($_GET['ultimas']??20)));
+        $recentGraduations=list_recent_graduations($recentLimit+1);
+        $recentHasMore=count($recentGraduations)>$recentLimit;
+        $recentGraduations=array_slice($recentGraduations,0,$recentLimit);
         $view = 'home';
     } else {
         http_response_code(404);

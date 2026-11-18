@@ -37,6 +37,17 @@ $chevron='<svg class="dashboard-chevron" viewBox="0 0 24 24" aria-hidden="true">
         <?php endforeach; ?>
     </div><?php endif; ?>
 </details>
+
+<details class="dashboard-section" id="blk_ultimas" open>
+    <summary class="dashboard-heading"><div><p class="eyebrow">HISTÓRICO</p><h2>Últimas graduações</h2></div><span class="dashboard-heading-side"><?=$chevron?></span></summary>
+    <?php if ($recentGraduations===[]): ?><p class="dashboard-empty">Nenhuma graduação registrada ainda.</p><?php else: ?><div class="history-list">
+        <?php foreach ($recentGraduations as $item): ?>
+            <article class="history-card"><div class="history-date"><?=h((new DateTimeImmutable($item['graduated_at'],new DateTimeZone('America/Sao_Paulo')))->format('d/m/Y'))?></div><div class="history-content"><a class="recent-name" href="/?page=student&id=<?=(int)$item['student_id']?>"><?=h($item['student_name'])?></a><strong><?=belt_rank_html($item['from_belt'],(int)$item['from_degrees'])?> <span aria-hidden="true">→</span> <?=belt_rank_html($item['to_belt'],(int)$item['to_degrees'])?></strong><small><?php if ($item['event_id']===null): ?>Graduação avulsa<?php else: ?><a href="/?page=event&id=<?=(int)$item['event_id']?>"><?=h($item['event_name']??'Evento')?></a><?php endif; ?> · Graduado por <?=h($item['graduated_by_name']??'usuário')?></small></div></article>
+        <?php endforeach; ?>
+    </div>
+    <?php if ($recentHasMore): ?><a class="secondary-link show-more" href="/?ultimas=<?=$recentLimit+20?>#blk_ultimas">Mostrar mais</a><?php endif; ?>
+    <?php endif; ?>
+</details>
 <script>
 document.querySelectorAll('details[id^="blk_"]').forEach(block=>{
     try{const saved=localStorage.getItem('graduacao.'+block.id);if(saved==='0')block.open=false;}catch{}

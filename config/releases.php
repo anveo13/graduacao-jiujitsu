@@ -2,8 +2,17 @@
 declare(strict_types=1);
 
 return [
-    'current' => '0.6.0',
+    'current' => '0.6.1',
     'releases' => [
+        [
+            'version' => '0.6.1',
+            'date' => '2026-11-18',
+            'title' => 'Últimas graduações',
+            'changes' => [
+                'Novo bloco no Início com as últimas graduações: data, aluno, troca de faixa ou grau, evento (ou avulsa) e quem graduou.',
+                'Mostra as 20 mais recentes; o botão "Mostrar mais" traz mais 20 a cada toque.',
+            ],
+        ],
         [
             'version' => '0.6.0',
             'date' => '2026-11-18',
