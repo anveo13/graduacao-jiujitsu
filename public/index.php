@@ -7,6 +7,7 @@ require dirname(__DIR__).'/src/belts.php';
 require dirname(__DIR__).'/src/eligibility.php';
 require dirname(__DIR__).'/src/students.php';
 require dirname(__DIR__).'/src/events.php';
+require dirname(__DIR__).'/src/users.php';
 
 $releases = require dirname(__DIR__).'/config/releases.php';
 $page = (string) ($_GET['page'] ?? 'home');
@@ -22,7 +23,7 @@ if ($page === 'login' && $method === 'POST') {
     $error = 'Usuário ou senha inválidos, ou limite de tentativas atingido.';
 }
 
-if ($page !== 'login') {
+if (!in_array($page, ['login','accept-invite'], true)) {
     $user = require_login();
 }
 
@@ -43,6 +44,57 @@ $today = new DateTimeImmutable('today', new DateTimeZone('America/Sao_Paulo'));
 $timezone = new DateTimeZone('America/Sao_Paulo');
 $notice = '';
 $canManageEvents = $user !== null && in_array($user['role'], ['master', 'admin'], true);
+
+if ($page === 'accept-invite') {
+    $inviteToken=(string)($_POST['token']??$_GET['token']??'');
+    $acceptInvite=find_valid_invitation($inviteToken);
+    if ($method==='POST') {
+        verify_csrf();
+        try {
+            $newUser=accept_invitation($inviteToken,(string)($_POST['name']??''),(string)($_POST['username']??''),(string)($_POST['password']??''),(string)($_POST['password_confirmation']??''),substr((string)($_SERVER['REMOTE_ADDR']??'local'),0,45));
+            session_regenerate_id(true);$_SESSION['user']=$newUser;redirect('/');
+        } catch (InvalidArgumentException|RuntimeException $exception) { http_response_code(422);$error=$exception->getMessage();$acceptInvite=find_valid_invitation($inviteToken); }
+    } elseif ($method!=='GET') { http_response_code(405);exit('Método não permitido.'); }
+    require dirname(__DIR__).'/views/accept-invite.php';
+    exit;
+}
+
+if ($page === 'invite-create') {
+    if ($method!=='POST') { http_response_code(405);exit('Método não permitido.'); }
+    $user=require_roles('master');verify_csrf();
+    try { $_SESSION['new_invitation_link']=create_invitation((string)($_POST['name']??''),(string)($_POST['role']??''),(int)$user['id']);redirect('/?page=users&invite-created=1'); }
+    catch (InvalidArgumentException $exception) { http_response_code(422);$error=$exception->getMessage();$page='users'; }
+}
+
+if ($page === 'invite-cancel') {
+    if ($method!=='POST') { http_response_code(405);exit('Método não permitido.'); }
+    $user=require_roles('master');verify_csrf();
+    $id=filter_var($_POST['id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+    if ($id===false) { http_response_code(400);exit('Convite inválido.'); }
+    try { cancel_invitation((int)$id);redirect('/?page=users&invite-cancelled=1'); }
+    catch (RuntimeException $exception) { http_response_code(422);$error=$exception->getMessage();$page='users'; }
+}
+
+if ($page === 'user-role' || $page === 'user-active') {
+    if ($method!=='POST') { http_response_code(405);exit('Método não permitido.'); }
+    $user=require_roles('master');verify_csrf();
+    $id=filter_var($_POST['id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+    if ($id===false) { http_response_code(400);exit('Usuário inválido.'); }
+    try {
+        if ($page==='user-role') update_user_role((int)$id,(string)($_POST['role']??''));
+        else set_user_active((int)$id,($_POST['active']??'')==='1');
+        redirect('/?page=users&user-updated=1');
+    } catch (InvalidArgumentException|RuntimeException $exception) { http_response_code(422);$error=$exception->getMessage();$page='users'; }
+}
+
+if ($page === 'profile-save') {
+    if ($method!=='POST') { http_response_code(405);exit('Método não permitido.'); }
+    $user=require_login();verify_csrf();
+    try {
+        update_own_profile($user,(string)($_POST['name']??''),(string)($_POST['current_password']??''),(string)($_POST['new_password']??''),(string)($_POST['password_confirmation']??''));
+        redirect('/?page=profile&saved=1');
+    } catch (InvalidArgumentException|RuntimeException $exception) { http_response_code(422);$error=$exception->getMessage();$page='profile';$profileName=trim((string)($_POST['name']??'')); }
+}
 
 if ($page === 'event-create') {
     if ($method !== 'POST') { http_response_code(405); exit('Método não permitido.'); }
@@ -189,6 +241,16 @@ if (!isset($view)) {
         $availableStudents = $canManageEvents ? list_students_available_for_event((int)$eventId) : [];
         $confirmationNeeded = $confirmationNeeded ?? null;
         $view = 'event';
+    } elseif ($page === 'users') {
+        require_roles('master');
+        $users=list_users();$invitations=list_invitations();
+        $newInvitationLink=(string)($_SESSION['new_invitation_link']??'');unset($_SESSION['new_invitation_link']);
+        $notice=isset($_GET['invite-created'])?'Convite criado; copie o link e envie para a pessoa.':(isset($_GET['invite-cancelled'])?'Convite cancelado.':(isset($_GET['user-updated'])?'Usuário atualizado.':''));
+        $view='users';
+    } elseif ($page === 'profile') {
+        $profileName=$profileName??$user['name'];
+        $notice=isset($_GET['saved'])?'Perfil atualizado.':'';
+        $view='profile';
     } elseif ($page === 'student-new') {
         require_roles('master', 'admin');
         $student = null;
@@ -219,8 +281,8 @@ if (!isset($view)) {
 }
 
 ?><!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#17352c"><title><?= in_array($view,['students','student-form'],true) ? 'Alunos' : (in_array($view,['events','event'],true) ? 'Graduações' : 'Início') ?> · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css"></head><body>
-<header class="topbar"><a class="brand" href="/">Graduação <span>Jiu-Jitsu</span></a><nav class="main-nav" aria-label="Navegação principal"><a href="/?page=students">Alunos</a><a href="/?page=events">Graduações</a></nav><div class="account"><span><?=h($user['name'])?><small><?=h($roleNames[$user['role']]??$user['role'])?></small></span><form method="post" action="/?page=logout"><?=csrf_field()?><button class="logout" type="submit">Sair</button></form></div></header>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#17352c"><title><?= in_array($view,['students','student-form'],true) ? 'Alunos' : (in_array($view,['events','event'],true) ? 'Graduações' : ($view==='users'?'Usuários':($view==='profile'?'Meu perfil':'Início'))) ?> · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css"></head><body>
+<header class="topbar"><a class="brand" href="/">Graduação <span>Jiu-Jitsu</span></a><nav class="main-nav" aria-label="Navegação principal"><a href="/?page=students">Alunos</a><a href="/?page=events">Graduações</a><?php if ($user['role']==='master'): ?><a href="/?page=users">Usuários</a><?php endif; ?><a href="/?page=profile">Meu perfil</a></nav><div class="account"><span><?=h($user['name'])?><small><?=h($roleNames[$user['role']]??$user['role'])?></small></span><form method="post" action="/?page=logout"><?=csrf_field()?><button class="logout" type="submit">Sair</button></form></div></header>
 <main class="content">
     <?php if ($view === 'home'): ?><section class="welcome"><p class="eyebrow">PAINEL</p><h1>Olá, <?=h($user['name'])?>.</h1><p>Seu espaço para acompanhar as graduações da equipe.</p></section><section class="empty-state"><div class="belt-icon" aria-hidden="true">🥋</div><h2>Cadastro da equipe</h2><p>Consulte os alunos, confira as faixas e mantenha os cadastros em dia.</p><a class="primary-link" href="/?page=students">Ver alunos</a><p class="home-role"><span class="badge"><?= $user['role']==='viewer'?'Acesso de visualização':'Perfil com edição' ?></span></p></section>
     <?php else: ?>

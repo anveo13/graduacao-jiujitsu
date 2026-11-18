@@ -1,6 +1,6 @@
 # Briefing — Graduação Jiu-Jitsu
 
-**Situação:** versão 0.2.0 publicada em `https://listagraduacao.duckdns.org/`. A versão 0.3.0 está em preparação local.
+**Situação:** versão 0.2.0 publicada em `https://listagraduacao.duckdns.org/`; a 0.3.0 está commitada em `main`, mas a publicação não foi confirmada. A versão 0.4.0 está em preparação local.
 **Escrito em:** 17/11/2026, a partir da conversa feita dentro do projeto Carmelito's.
 **Revisado em:** 18/11/2026 — 0.1.0 publicada; VM A1 Flex e subdomínio configurados.
 **Primeiro evento real:** graduação de **04/12/2026**.
@@ -554,7 +554,7 @@ só aparecem em fevereiro.
 
 | Dúvida | Resposta |
 |---|---|
-| Como automatizar os deploys depois do push? | A VM consulta `main` a cada cinco minutos com sua deploy key somente de leitura; `deploy/install-auto-deploy.sh` instala o timer systemd. |
+| Como automatizar os deploys depois do push? | Foi criado um timer systemd que consulta `main` a cada cinco minutos com a deploy key somente de leitura; ativar na VM com `deploy/install-auto-deploy.sh` e conferir o status. |
 
 ### Em aberto
 

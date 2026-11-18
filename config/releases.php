@@ -2,8 +2,18 @@
 declare(strict_types=1);
 
 return [
-    'current' => '0.3.0',
+    'current' => '0.4.0',
     'releases' => [
+        [
+            'version' => '0.4.0',
+            'date' => '2026-11-18',
+            'title' => 'Usuários e convites',
+            'changes' => [
+                'Convites de uso único para Administradores e Visualizadores, válidos por sete dias.',
+                'Tela de usuários para alterar perfis, desativar e reativar contas.',
+                'Aceite de convite com criação de conta e entrada automática; perfil para trocar nome e senha.',
+            ],
+        ],
         [
             'version' => '0.3.0',
             'date' => '2026-11-18',
