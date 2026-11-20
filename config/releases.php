@@ -2,8 +2,17 @@
 declare(strict_types=1);
 
 return [
-    'current' => '0.7.1',
+    'current' => '0.7.2',
     'releases' => [
+        [
+            'version' => '0.7.2',
+            'date' => '2026-11-20',
+            'title' => 'Faixas sanfona e ordenação',
+            'changes' => [
+                'Faixas e grupo de graduados em blocos sanfona, com estado lembrado por evento.',
+                'Ordenação dos alunos por graduação ou em ordem alfabética dentro de cada faixa.',
+            ],
+        ],
         [
             'version' => '0.7.1',
             'date' => '2026-11-20',

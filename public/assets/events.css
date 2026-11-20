@@ -1,8 +1,17 @@
-.event-search{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:7px 12px;margin:0 0 19px;padding:13px 15px;background:#fff;border:1px solid #e2e2e2;border-radius:12px;box-shadow:0 3px 12px #00000008}
+.event-list-controls{display:grid;grid-template-columns:minmax(0,1fr) 230px;align-items:stretch;gap:12px;margin:0 0 19px}
+.event-search{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:7px 12px;margin:0;padding:13px 15px;background:#fff;border:1px solid #e2e2e2;border-radius:12px;box-shadow:0 3px 12px #00000008}
 .event-search label{grid-column:1/-1;font-size:12px;font-weight:700;color:#59645d}
 .event-search input{width:100%;min-width:0;height:42px;border:1px solid #d8d8d8;border-radius:8px;padding:0 11px;color:#202020;font:14px 'DM Sans',system-ui,sans-serif}
 .event-search input:focus{outline:3px solid #c8102e30;border-color:#c8102e}
 .event-search>span{min-width:115px;text-align:right;color:#737b75;font-size:11px}
+.event-sort{display:grid;align-content:center;gap:7px;padding:12px 14px;background:#fff;border:1px solid #e2e2e2;border-radius:12px;color:#59645d;font-size:12px;font-weight:700;box-shadow:0 3px 12px #00000008}
+.event-sort select{width:100%;height:39px;border:1px solid #d8d8d8;border-radius:8px;background:#fff;padding:0 9px;color:#202020;font:13px 'DM Sans',system-ui,sans-serif}
 .event-search-empty{margin-top:0}
-.graduation-card[hidden],.belt-group[hidden]{display:none!important}
-@media(max-width:600px){.event-search{grid-template-columns:1fr;gap:6px;padding:12px}.event-search label{grid-column:auto}.event-search>span{text-align:left;min-width:0}}
+.graduation-card[hidden],.event-belt-section[hidden]{display:none!important}
+.event-belt-section{margin:0 0 14px;padding:16px 18px}
+.event-belt-section>summary{cursor:pointer;list-style:none}
+.event-belt-section>summary::-webkit-details-marker{display:none}
+.event-belt-section .dashboard-heading h2{display:flex;align-items:center;gap:9px}
+.event-belt-section h2 .belt-bar{margin-right:0}
+.event-belt-section .graduation-list{margin-top:14px}
+@media(max-width:700px){.event-list-controls{grid-template-columns:1fr;gap:8px}.event-search{grid-template-columns:1fr;gap:6px;padding:12px}.event-search label{grid-column:auto}.event-search>span{text-align:left;min-width:0}.event-sort{padding:10px 12px}.event-belt-section{padding:14px}}
