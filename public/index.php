@@ -9,6 +9,7 @@ require dirname(__DIR__).'/src/students.php';
 require dirname(__DIR__).'/src/events.php';
 require dirname(__DIR__).'/src/users.php';
 require dirname(__DIR__).'/src/graduations.php';
+require dirname(__DIR__).'/src/reports.php';
 
 $releases = require dirname(__DIR__).'/config/releases.php';
 $cssVersion = (string)(filemtime(dirname(__DIR__).'/public/assets/app.css') ?: 0);
@@ -291,6 +292,27 @@ if (!isset($view)) {
         $events = list_events();
         $notice = isset($_GET['deleted']) ? 'Evento apagado.' : '';
         $view = 'events';
+    } elseif ($page === 'reports') {
+        if ($method !== 'GET') { http_response_code(405); exit('Método não permitido.'); }
+        $events = list_events();
+        $view = 'reports';
+    } elseif ($page === 'report') {
+        if ($method !== 'GET') { http_response_code(405); exit('Método não permitido.'); }
+        $reportKind = (string)($_GET['kind'] ?? '');
+        if ($reportKind === 'event') {
+            $eventId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+            if ($eventId === false) { http_response_code(400); exit('Evento inválido.'); }
+            $reportEvent = find_event((int)$eventId);
+            if ($reportEvent === null) { http_response_code(404); exit('Evento não encontrado.'); }
+            $reportRows = list_event_report_rows((int)$eventId);
+            $reportIsPast = $reportEvent['event_date'] < $today->format('Y-m-d');
+            $view = 'report-event';
+        } elseif ($reportKind === 'students') {
+            $reportRows = list_student_report_rows();
+            $view = 'report-students';
+        } else {
+            http_response_code(400); exit('Tipo de relatório inválido.');
+        }
     } elseif ($page === 'event') {
         $eventId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
         if ($eventId === false) { http_response_code(400); exit('Evento inválido.'); }
@@ -372,6 +394,7 @@ if (!isset($view)) {
 $activeNav = match (true) {
     in_array($view, ['students', 'student-form', 'student'], true) => 'students',
     in_array($view, ['events', 'event'], true) => 'events',
+    in_array($view, ['reports', 'report-event', 'report-students'], true) => 'reports',
     $view === 'users' => 'users',
     $view === 'profile' => 'profile',
     default => 'home',
@@ -381,14 +404,15 @@ $navItems = [
     'home' => ['/', 'Início', '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'],
     'students' => ['/?page=students', 'Alunos', '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-6 6.5-6s5.9 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3.2 3 3.5 6"/>'],
     'events' => ['/?page=events', 'Eventos', '<circle cx="12" cy="9" r="5"/><path d="m8.5 13-2 8 5.5-3 5.5 3-2-8"/>'],
+    'reports' => ['/?page=reports', 'Relatórios', '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h7M9 16h7"/>'],
 ];
 if ($user['role'] === 'master') {
     $navItems['users'] = ['/?page=users', 'Usuários', '<path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/>'];
 }
 $profileIcon = '<circle cx="12" cy="8" r="4"/><path d="M4 21c.8-4 4-6.5 8-6.5s7.2 2.5 8 6.5"/>';
-$pageTitles = ['home' => 'Início', 'students' => 'Alunos', 'events' => 'Eventos', 'users' => 'Usuários', 'profile' => 'Meu perfil'];
+$pageTitles = ['home' => 'Início', 'students' => 'Alunos', 'events' => 'Eventos', 'reports' => 'Relatórios', 'users' => 'Usuários', 'profile' => 'Meu perfil'];
 ?><!doctype html>
-<html lang="pt-BR"><head><?=$appHead?><title><?=h($pageTitles[$activeNav])?> · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css?v=<?=rawurlencode($cssVersion)?>"></head><body>
+<html lang="pt-BR"><head><?=$appHead?><title><?=h($pageTitles[$activeNav])?> · Graduação Jiu-Jitsu</title><link rel="stylesheet" href="/assets/app.css?v=<?=rawurlencode($cssVersion)?>"><?php if ($activeNav==='reports'): ?><link rel="stylesheet" href="/assets/reports.css?v=<?=rawurlencode((string)(filemtime(dirname(__DIR__).'/public/assets/reports.css')?:0))?>"><?php endif; ?></head><body>
 <header class="topbar">
     <a class="brand" href="/"><span class="brand-badge" aria-hidden="true">GJ</span><span class="brand-text">Graduação <span>Jiu-Jitsu</span></span></a>
     <nav class="main-nav" aria-label="Navegação principal">

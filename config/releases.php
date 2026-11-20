@@ -2,8 +2,18 @@
 declare(strict_types=1);
 
 return [
-    'current' => '0.6.1',
+    'current' => '0.7.0',
     'releases' => [
+        [
+            'version' => '0.7.0',
+            'date' => '2026-11-20',
+            'title' => 'Relatórios de eventos e alunos',
+            'changes' => [
+                'Nova área de relatórios com opção para eventos e para a equipe ativa.',
+                'Relatório de evento mostra o planejamento antes da data e o resultado registrado depois dela.',
+                'Relatórios com layout próprio para impressão e para salvar como PDF.',
+            ],
+        ],
         [
             'version' => '0.6.1',
             'date' => '2026-11-18',

@@ -16,6 +16,7 @@ $shareText = $doneCount > 0 ? event_share_text($event, $graduations) : '';
 <?php if ($error !== ''): ?><p class="alert" role="alert"><?=h($error)?></p><?php endif; ?>
 
 <div class="event-actions">
+    <a class="secondary-link" href="/?page=report&amp;kind=event&amp;id=<?=$eventId?>">Gerar relatório</a>
     <?php if ($canManageEvents && $availableStudents !== []): ?><button class="secondary" type="button" data-open="event-add-panel">+ Adicionar alunos</button><?php endif; ?>
     <?php if ($shareText !== ''): ?><a class="secondary-link" href="https://wa.me/?text=<?=rawurlencode($shareText)?>" target="_blank" rel="noopener">Compartilhar no WhatsApp</a><button class="secondary" type="button" id="copy-share" data-text="<?=h($shareText)?>">Copiar resultado</button><?php endif; ?>
     <?php if ($canManageEvents): ?><button class="text-button" type="button" data-open="event-edit-panel">Editar evento</button><?php endif; ?>
