@@ -1,0 +1,11 @@
+.student-list-controls{display:grid;grid-template-columns:minmax(0,1fr) 230px;align-items:stretch;gap:12px;margin:0 0 24px}
+.student-list-controls .search-form{min-width:0;margin:0}
+.student-sort{display:grid;align-content:center;gap:7px;padding:12px 14px;background:#fff;border:1px solid #e2e2e2;border-radius:12px;color:#59645d;font-size:12px;font-weight:700;box-shadow:0 3px 12px #00000008}
+.student-sort select{width:100%;height:39px;border:1px solid #d8d8d8;border-radius:8px;background:#fff;padding:0 9px;color:#202020;font:13px 'DM Sans',system-ui,sans-serif}
+.student-belt-section{margin:0 0 14px;padding:16px 18px}
+.student-belt-section>summary{cursor:pointer;list-style:none}
+.student-belt-section>summary::-webkit-details-marker{display:none}
+.student-belt-section .dashboard-heading h2{display:flex;align-items:center;gap:9px}
+.student-belt-section h2 .belt-bar{margin-right:0}
+.student-belt-section .student-list{margin-top:14px}
+@media(max-width:700px){.student-list-controls{grid-template-columns:1fr;gap:8px;margin-bottom:20px}.student-sort{padding:10px 12px}.student-belt-section{padding:14px}}

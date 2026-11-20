@@ -2,8 +2,17 @@
 declare(strict_types=1);
 
 return [
-    'current' => '0.7.2',
+    'current' => '0.7.3',
     'releases' => [
+        [
+            'version' => '0.7.3',
+            'date' => '2026-11-20',
+            'title' => 'Lista de alunos em sanfona',
+            'changes' => [
+                'Faixas na tela Alunos agora podem ser abertas e fechadas, com a escolha lembrada neste aparelho.',
+                'Ordenação dos alunos por graduação ou em ordem alfabética dentro de cada faixa.',
+            ],
+        ],
         [
             'version' => '0.7.2',
             'date' => '2026-11-20',
