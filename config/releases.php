@@ -2,8 +2,17 @@
 declare(strict_types=1);
 
 return [
-    'current' => '0.7.3',
+    'current' => '0.7.4',
     'releases' => [
+        [
+            'version' => '0.7.4',
+            'date' => '2026-11-20',
+            'title' => 'Relatório de evento por faixa',
+            'changes' => [
+                'Relatório do evento separado em grupos pela faixa que cada aluno tinha antes da graduação.',
+                'Dentro de cada grupo, quem recebe graus na mesma faixa aparece antes de quem troca de faixa.',
+            ],
+        ],
         [
             'version' => '0.7.3',
             'date' => '2026-11-20',

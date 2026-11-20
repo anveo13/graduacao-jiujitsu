@@ -4,6 +4,13 @@ $reportEventDate = new DateTimeImmutable($reportEvent['event_date'], new DateTim
 $reportDone = count(array_filter($reportRows, static fn(array $row): bool => $row['status'] === 'done'));
 $reportPending = count($reportRows) - $reportDone;
 $reportEventFormatted = $reportEventDate->format('d/m/Y');
+$reportRowsByBelt = [];
+foreach (belt_names() as $beltCode => $beltName) {
+    $sameBeltRows = array_values(array_filter($reportRows, static fn(array $row): bool => $row['from_belt'] === $beltCode && $row['to_belt'] === $beltCode));
+    $beltChangeRows = array_values(array_filter($reportRows, static fn(array $row): bool => $row['from_belt'] === $beltCode && $row['to_belt'] !== $beltCode));
+    $beltRows = [...$sameBeltRows, ...$beltChangeRows];
+    if ($beltRows !== []) $reportRowsByBelt[$beltCode] = ['name' => $beltName, 'rows' => $beltRows];
+}
 ?>
 <a class="back-link no-print" href="/?page=reports">‹ Relatórios</a>
 <div class="report-toolbar no-print">
@@ -29,34 +36,35 @@ $reportEventFormatted = $reportEventDate->format('d/m/Y');
 
     <?php if ($reportRows === []): ?>
         <p class="report-empty">Nenhum aluno foi adicionado a este evento.</p>
-    <?php elseif (!$reportIsPast): ?>
-        <table class="report-table">
-            <thead><tr><th>Aluno</th><th>Graduação atual</th><th>Graduação prevista</th><th>Situação</th></tr></thead>
-            <tbody>
-            <?php foreach ($reportRows as $row): ?>
-                <tr>
-                    <td class="report-student-name"><?=h($row['student_name'])?></td>
-                    <td><?=belt_rank_html($row['from_belt'],(int)$row['from_degrees'])?></td>
-                    <td><?=belt_bar_html($row['to_belt'],(int)$row['to_degrees'])?><?=belt_rank_html($row['to_belt'],(int)$row['to_degrees'])?></td>
-                    <td><span class="report-status <?=$row['status']==='done'?'is-done':'is-pending'?>"><?=$row['status']==='done'?'Check registrado':'Planejado'?></span><?=$row['hidden']?' <small class="report-note">Oculto na lista</small>':''?></td>
-                </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
     <?php else: ?>
-        <table class="report-table">
-            <thead><tr><th>Aluno</th><th>Graduação antes do evento</th><th>Graduação após o evento</th><th>Resultado</th></tr></thead>
-            <tbody>
-            <?php foreach ($reportRows as $row): $graduated=$row['status']==='done'; $afterBelt=$graduated?$row['to_belt']:$row['from_belt']; $afterDegrees=$graduated?(int)$row['to_degrees']:(int)$row['from_degrees']; ?>
-                <tr>
-                    <td class="report-student-name"><?=h($row['student_name'])?></td>
-                    <td><?=belt_rank_html($row['from_belt'],(int)$row['from_degrees'])?></td>
-                    <td><?=belt_bar_html($afterBelt,$afterDegrees)?><?=belt_rank_html($afterBelt,$afterDegrees)?></td>
-                    <td><span class="report-status <?=$graduated?'is-done':'is-pending'?>"><?=$graduated?'Graduado':'Não graduado'?></span><?=$row['hidden']?' <small class="report-note">Oculto na lista</small>':''?></td>
-                </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
+        <?php foreach ($reportRowsByBelt as $beltCode => $beltGroup): ?>
+            <section class="report-belt-group event-report-group">
+                <h2><?=belt_bar_html($beltCode)?><?=h($beltGroup['name'])?><span><?=count($beltGroup['rows'])?></span></h2>
+                <table class="report-table">
+                    <?php if (!$reportIsPast): ?><thead><tr><th>Aluno</th><th>Graduação atual</th><th>Graduação prevista</th><th>Situação</th></tr></thead>
+                    <?php else: ?><thead><tr><th>Aluno</th><th>Graduação antes do evento</th><th>Graduação após o evento</th><th>Resultado</th></tr></thead><?php endif; ?>
+                    <tbody>
+                    <?php foreach ($beltGroup['rows'] as $row): ?>
+                        <?php if (!$reportIsPast): ?>
+                            <tr>
+                                <td class="report-student-name"><?=h($row['student_name'])?></td>
+                                <td><?=belt_rank_html($row['from_belt'],(int)$row['from_degrees'])?></td>
+                                <td><?=belt_bar_html($row['to_belt'],(int)$row['to_degrees'])?><?=belt_rank_html($row['to_belt'],(int)$row['to_degrees'])?></td>
+                                <td><span class="report-status <?=$row['status']==='done'?'is-done':'is-pending'?>"><?=$row['status']==='done'?'Check registrado':'Planejado'?></span><?=$row['hidden']?' <small class="report-note">Oculto na lista</small>':''?></td>
+                            </tr>
+                        <?php else: $graduated=$row['status']==='done'; $afterBelt=$graduated?$row['to_belt']:$row['from_belt']; $afterDegrees=$graduated?(int)$row['to_degrees']:(int)$row['from_degrees']; ?>
+                            <tr>
+                                <td class="report-student-name"><?=h($row['student_name'])?></td>
+                                <td><?=belt_rank_html($row['from_belt'],(int)$row['from_degrees'])?></td>
+                                <td><?=belt_bar_html($afterBelt,$afterDegrees)?><?=belt_rank_html($afterBelt,$afterDegrees)?></td>
+                                <td><span class="report-status <?=$graduated?'is-done':'is-pending'?>"><?=$graduated?'Graduado':'Não graduado'?></span><?=$row['hidden']?' <small class="report-note">Oculto na lista</small>':''?></td>
+                            </tr>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </section>
+        <?php endforeach; ?>
     <?php endif; ?>
     <footer class="report-footer"><span>Sistema de Graduação Jiu-Jitsu</span><span>Gerado em <?=h((new DateTimeImmutable('now',new DateTimeZone('America/Sao_Paulo')))->format('d/m/Y H:i'))?></span></footer>
 </article>

@@ -1,6 +1,6 @@
 # Briefing — Graduação Jiu-Jitsu
 
-**Situação:** versão 0.7.2 publicada em `https://listagraduacao.duckdns.org/`. A versão 0.7.3 está em preparação local.
+**Situação:** versão 0.7.3 publicada em `https://listagraduacao.duckdns.org/`. A versão 0.7.4 está em preparação local.
 **Escrito em:** 17/11/2026, a partir da conversa feita dentro do projeto Carmelito's.
 **Revisado em:** 18/11/2026 — 0.1.0 publicada; VM A1 Flex e subdomínio configurados.
 **Primeiro evento real:** graduação de **04/12/2026**.
@@ -256,6 +256,7 @@ Três blocos:
 - (0.7.0) **Relatórios**: seleção de evento ou equipe. Antes da data, o relatório do evento mostra
   faixa atual e graduação planejada; após a data, mostra o resultado dos checks, mantendo a faixa
   anterior para quem não foi graduado. Os relatórios podem ser impressos ou salvos em PDF.
+- (0.7.4) Relatório de evento separado pela faixa atual, com quem troca de faixa no fim de cada grupo.
 - O Visualizador só vê a lista e dá o check (e desfaz o próprio).
 
 ### 4.5 Usuários (só o Master)
@@ -530,6 +531,7 @@ na internet, e cada etapa seguinte sobe como uma versão nova.
 | **0.7.1** | Busca por nome na lista do evento, com filtro imediato e sem diferenciar acentos | encontra participantes pelo nome entre pendentes e graduados |
 | **0.7.2** | Faixas do evento em sanfona e ordenação dos alunos | abre ou fecha os participantes de cada faixa e ordena por graduação ou alfabeticamente |
 | **0.7.3** | Faixas da tela Alunos em sanfona e ordenação dos alunos | abre ou fecha cada faixa e ordena os nomes por grau ou alfabeticamente |
+| **0.7.4** | Relatório do evento agrupado por faixa, com trocas de faixa no fim de cada grupo | confere cada grupo separadamente antes ou depois do evento |
 
 **Prazo:** para usar em 04/12, precisam estar no ar o Básico, a Publicação, a 0.2.0 e a
 0.3.0. No dia do evento só o Master usa; os convites (0.4.0) entram depois.
