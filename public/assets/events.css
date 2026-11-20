@@ -1,0 +1,8 @@
+.event-search{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:7px 12px;margin:0 0 19px;padding:13px 15px;background:#fff;border:1px solid #e2e2e2;border-radius:12px;box-shadow:0 3px 12px #00000008}
+.event-search label{grid-column:1/-1;font-size:12px;font-weight:700;color:#59645d}
+.event-search input{width:100%;min-width:0;height:42px;border:1px solid #d8d8d8;border-radius:8px;padding:0 11px;color:#202020;font:14px 'DM Sans',system-ui,sans-serif}
+.event-search input:focus{outline:3px solid #c8102e30;border-color:#c8102e}
+.event-search>span{min-width:115px;text-align:right;color:#737b75;font-size:11px}
+.event-search-empty{margin-top:0}
+.graduation-card[hidden],.belt-group[hidden]{display:none!important}
+@media(max-width:600px){.event-search{grid-template-columns:1fr;gap:6px;padding:12px}.event-search label{grid-column:auto}.event-search>span{text-align:left;min-width:0}}

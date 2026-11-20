@@ -62,18 +62,27 @@ $shareText = $doneCount > 0 ? event_share_text($event, $graduations) : '';
     <?php else: ?><a class="text-link" href="/?page=event&id=<?=$eventId?>&hidden=1">Mostrar escondidos</a><?php endif; ?>
 </div>
 
+<?php if ($graduations !== []): ?>
+<div class="event-search">
+    <label for="event-search-input">Buscar aluno neste evento</label>
+    <input id="event-search-input" type="search" placeholder="Digite o nome do aluno" autocomplete="off" aria-describedby="event-search-status">
+    <span id="event-search-status" role="status" aria-live="polite"><?=count($graduations)?> alunos na lista</span>
+</div>
+<p class="empty-state compact event-search-empty" id="event-search-empty" hidden>Nenhum aluno encontrado com esse nome.</p>
+<?php endif; ?>
+
 <?php if ($graduations === []): ?>
 <section class="empty-state compact"><div class="belt-icon" aria-hidden="true">🥋</div><h2>Lista vazia</h2><p>Adicione alunos para planejar as graduações deste evento.</p></section>
 <?php else: ?>
 <?php foreach (belt_names() as $beltCode=>$beltName): ?>
     <?php $rows=array_values(array_filter($graduations,static fn(array $row):bool=>$row['from_belt']===$beltCode && $row['status']==='planned')); if ($rows===[]) continue; ?>
-    <section class="belt-group"><h2><?=belt_bar_html($beltCode)?><?=h($beltName)?> <span><?=count($rows)?></span></h2><div class="graduation-list">
+    <section class="belt-group" data-event-group><h2><?=belt_bar_html($beltCode)?><?=h($beltName)?> <span><?=count($rows)?></span></h2><div class="graduation-list">
         <?php foreach ($rows as $row): $row['event_id']=$eventId; ?>
             <?php
             $eligibility=student_eligibility($row['current_belt'],(int)$row['current_degrees'],$row['last_graduation_at'],$eventDate);
             $stale=$row['from_belt']!==$row['current_belt']||(int)$row['from_degrees']!==(int)$row['current_degrees'];
             ?>
-            <article class="graduation-card <?=$row['hidden']?'is-hidden':''?>">
+            <article class="graduation-card <?=$row['hidden']?'is-hidden':''?>" data-event-card data-student-name="<?=h($row['student_name'])?>">
                 <div class="graduation-person"><h3><a class="student-name-link" href="/?page=student&id=<?=(int)$row['student_id']?>&evento=<?=$eventId?>"><?=h($row['student_name'])?></a></h3><p><?=belt_rank_html($row['from_belt'],(int)$row['from_degrees'])?> <span aria-hidden="true">→</span> <strong><?=belt_rank_html($row['to_belt'],(int)$row['to_degrees'])?></strong></p>
                     <?php if ($stale): ?><small class="eligibility waiting">O aluno mudou para <?=h(belt_rank($row['current_belt'],(int)$row['current_degrees']))?> depois deste plano. Use "Alterar" para revisar.</small>
                     <?php elseif (!$eligibility['eligible'] && $eligibility['eligible_at']!==null): ?><small class="eligibility waiting">Ainda não elegível; a partir de <?=h((new DateTimeImmutable($eligibility['eligible_at'],new DateTimeZone('America/Sao_Paulo')))->format('d/m/Y'))?></small><?php endif; ?>
@@ -97,9 +106,9 @@ $shareText = $doneCount > 0 ? event_share_text($event, $graduations) : '';
     </div></section>
 <?php endforeach; ?>
 <?php $doneRows=array_values(array_filter($graduations,static fn(array $row):bool=>$row['status']==='done')); if ($doneRows!==[]): ?>
-<section class="belt-group done-group"><h2>Já graduados <span><?=count($doneRows)?></span></h2><div class="graduation-list">
+<section class="belt-group done-group" data-event-group><h2>Já graduados <span><?=count($doneRows)?></span></h2><div class="graduation-list">
     <?php foreach ($doneRows as $row): $row['event_id']=$eventId; $undoAllowed=$user['role']!=='viewer'||(int)$row['graduated_by_id']===(int)$user['id']; ?>
-        <article class="graduation-card is-done"><div class="graduation-person"><h3><a class="student-name-link" href="/?page=student&id=<?=(int)$row['student_id']?>&evento=<?=$eventId?>"><?=h($row['student_name'])?></a></h3><p><?=belt_rank_html($row['from_belt'],(int)$row['from_degrees'])?> <span aria-hidden="true">→</span> <strong><?=belt_rank_html($row['to_belt'],(int)$row['to_degrees'])?></strong></p><small class="graduation-by">Graduado por <?=h($row['graduated_by_name']??'usuário')?></small></div>
+        <article class="graduation-card is-done" data-event-card data-student-name="<?=h($row['student_name'])?>"><div class="graduation-person"><h3><a class="student-name-link" href="/?page=student&id=<?=(int)$row['student_id']?>&evento=<?=$eventId?>"><?=h($row['student_name'])?></a></h3><p><?=belt_rank_html($row['from_belt'],(int)$row['from_degrees'])?> <span aria-hidden="true">→</span> <strong><?=belt_rank_html($row['to_belt'],(int)$row['to_degrees'])?></strong></p><small class="graduation-by">Graduado por <?=h($row['graduated_by_name']??'usuário')?></small></div>
             <?php if ($undoAllowed): ?><div class="graduation-actions"><form method="post" action="/?page=event-undo" data-confirm="Desfazer o check de <?=h($row['student_name'])?>? O aluno volta para a lista pendente."><?=$hiddenFields($row)?><button class="text-button danger" type="submit">Desfazer</button></form></div><?php endif; ?>
         </article>
     <?php endforeach; ?>
@@ -112,6 +121,12 @@ document.querySelectorAll('form[data-confirm]').forEach(form=>form.addEventListe
 document.querySelectorAll('[data-open]').forEach(button=>button.addEventListener('click',()=>{const panel=document.getElementById(button.dataset.open);panel.hidden=!panel.hidden;if(!panel.hidden)panel.scrollIntoView({behavior:'smooth',block:'nearest'});}));
 const shareButton=document.getElementById('copy-share');
 if(shareButton)shareButton.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(shareButton.dataset.text);shareButton.textContent='Resultado copiado';}catch{window.prompt('Copie o texto:',shareButton.dataset.text);}});
+const eventSearch=document.getElementById('event-search-input');
+if(eventSearch){
+    const cards=[...document.querySelectorAll('[data-event-card]')];const groups=[...document.querySelectorAll('[data-event-group]')];const empty=document.getElementById('event-search-empty');const status=document.getElementById('event-search-status');
+    const normalize=value=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').trim();
+    eventSearch.addEventListener('input',()=>{const query=normalize(eventSearch.value);let matches=0;cards.forEach(card=>{const match=normalize(card.dataset.studentName||'').includes(query);card.hidden=!match;if(match)matches++;});groups.forEach(group=>{group.hidden=!group.querySelector('[data-event-card]:not([hidden])');});empty.hidden=matches!==0;status.textContent=query?`${matches} ${matches===1?'aluno encontrado':'alunos encontrados'}`:`${cards.length} alunos na lista`;});
+}
 const bulkForm=document.querySelector('.bulk-add-form');
 if(bulkForm){
     const boxes=[...bulkForm.querySelectorAll('input[name="students[]"]')];const submit=document.getElementById('bulk-submit');const toggle=document.getElementById('bulk-toggle-all');

@@ -2,8 +2,17 @@
 declare(strict_types=1);
 
 return [
-    'current' => '0.7.0',
+    'current' => '0.7.1',
     'releases' => [
+        [
+            'version' => '0.7.1',
+            'date' => '2026-11-20',
+            'title' => 'Busca na lista do evento',
+            'changes' => [
+                'Busca instantânea por nome entre os alunos de um evento, inclusive os já graduados.',
+                'A busca ignora acentos e indica quando nenhum aluno corresponde ao nome digitado.',
+            ],
+        ],
         [
             'version' => '0.7.0',
             'date' => '2026-11-20',
